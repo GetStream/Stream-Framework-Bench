@@ -54,4 +54,3 @@ A stack will typically start several components
 # The benchmark script
 
 * The benchmark runs for either flat or aggregated feeds. Aggregated feeds are heavier on the cluster.
-* 

@@ -10,6 +10,9 @@ mkvirtualenv bench
 Install the dependencies
 pip install -r requirements
 
+Ensure you have your AWS cli setup:
+http://docs.aws.amazon.com/cli/latest/userguide/installing.html
+
 Configure your credentials file
 https://boto3.readthedocs.org/en/latest/guide/quickstart.html#configuration
 
@@ -19,6 +22,12 @@ fab launch_stack cassandra
 # Running the benchmark using stream framework
 
 fab start_bench cassandra
+
+The benchmark will slowly increase the number of users in the graph
+and measure:
+
+* The time it takes to read a feed
+* The fanout delay for feed updates
 
 # Stopping the stack
 
@@ -46,8 +55,7 @@ Copy the cassandra.json cloudformation file and make the required changes
 
 A stack will typically start several components
 
-* Admin instance - This instance launches the benchmark
-* RabbitMQ (message queue) - 1 large node
+* RabbitMQ (message queue) & Admin instance - 1 large node
 * Task workers/ Celery - An autoscaling group of task workers
 * A cluster of your database instances - 3 by default
 

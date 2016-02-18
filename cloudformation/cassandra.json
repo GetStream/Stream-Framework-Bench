@@ -1,0 +1,138 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Cassandra, RabbitMQ, Celery workers and main instance",
+  "Mappings" : {
+    "BenchMap": {
+        "SettingsMap": {
+            "AvailabilityZones": ["us-east-1c"]
+        },
+        "CassandraMap": {
+            "AMI" : "ami-711ca91a",
+            "InstanceType": "i2.xlarge"
+        },
+        "RabbitMap": {
+            "AMI" : "ami-fce3c696",
+            "InstanceType": "t2.micro"
+        },
+        "CeleryMap": {
+            "AMI" : "ami-fce3c696",
+            "InstanceType": "t2.micro"
+        }
+    }
+  },
+  "Resources": {
+
+    "CassandraSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable HTTP access via port 80 and SSH access",
+        "SecurityGroupIngress" : [
+          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"}
+        ]
+      }
+    },
+  
+    "CassandraAutoscaling": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "AvailabilityZones" : {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "AvailabilityZones" ]},
+        "Cooldown": "300",
+        "MaxSize": "1",
+        "MinSize": "1",
+        "HealthCheckGracePeriod": "300",
+        "HealthCheckType": "EC2",
+        "LaunchConfigurationName": {
+          "Ref": "Cassandra"
+        }
+      }
+    },
+    
+    "Cassandra": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "CassandraMap", "AMI" ]},
+        "InstanceType": { "Fn::FindInMap" : [ "BenchMap", "CassandraMap", "InstanceType" ]},
+        "KeyName": "StreamFrameworkBench",
+        "SecurityGroups": [{ "Ref" : "CassandraSecurityGroup" }],
+        "UserData": { 
+            "Fn::Base64":  "--clustername benchmark --totalnodes 1 --version community --release 2.2.5 --repository https://github.com/riptano/ComboAMI#2.6.3 --bootstrap --opscenter no"
+        }
+      }
+    },
+    
+    "RabbitSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable HTTP access via port 80 and SSH access",
+        "SecurityGroupIngress" : [
+          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"}
+        ]
+      }
+    },
+  
+    "RabbitAutoScaling": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "AvailabilityZones" : {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "AvailabilityZones" ]},
+        "Cooldown": "300",
+        "MaxSize": "1",
+        "MinSize": "1",
+        "HealthCheckGracePeriod": "300",
+        "HealthCheckType": "EC2",
+        "LaunchConfigurationName": {
+          "Ref": "Rabbit"
+        }
+      }
+    },
+    
+    "Rabbit": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "RabbitMap", "AMI" ]},
+        "InstanceType": { "Fn::FindInMap" : [ "BenchMap", "RabbitMap", "InstanceType" ]},
+        "KeyName": "StreamFrameworkBench",
+        "SecurityGroups": [{ "Ref" : "RabbitSecurityGroup" }]
+      }
+    },
+    
+    "CelerySecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable HTTP access via port 80 and SSH access",
+        "SecurityGroupIngress" : [
+          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"}
+        ]
+      }
+    },
+  
+    "CeleryAutoScaling": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "AvailabilityZones" : {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "AvailabilityZones" ]},
+        "Cooldown": "300",
+        "MaxSize": "1",
+        "MinSize": "1",
+        "HealthCheckGracePeriod": "300",
+        "HealthCheckType": "EC2",
+        "LaunchConfigurationName": {
+          "Ref": "Celery"
+        }
+      }
+    },
+    
+    "Celery": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "CeleryMap", "AMI" ]},
+        "InstanceType": { "Fn::FindInMap" : [ "BenchMap", "CeleryMap", "InstanceType" ]},
+        "KeyName": "StreamFrameworkBench",
+        "SecurityGroups": [{ "Ref" : "CelerySecurityGroup" }]
+      }
+    }
+    
+  }
+  
+}

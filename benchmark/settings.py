@@ -9,3 +9,26 @@ STREAM_CASSANDRA_HOSTS = [
 
 CELERY_ALWAYS_EAGER = True
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        # Send all messages to console
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'bench': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}
+DEBUG = True
+

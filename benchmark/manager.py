@@ -10,7 +10,11 @@ class BenchManager(Manager):
     fanout_chunk_size = 100
     
     def get_user_follower_ids(self, user_id):
-        active_follower_ids = range(100)
-        return {FanoutPriority.HIGH: active_follower_ids}
+        return {FanoutPriority.HIGH: self.follower_ids}
     
-manager = BenchManager()
+    def add_user_activity(self, user_id, activity, follower_ids):
+        # convenient way to overwrite the follower ids
+        self.follower_ids = follower_ids
+        Manager.add_user_activity(self, user_id, activity)
+    
+benchmark_manager = BenchManager()

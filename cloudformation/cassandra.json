@@ -4,7 +4,8 @@
   "Mappings" : {
     "BenchMap": {
         "SettingsMap": {
-            "AvailabilityZones": ["us-east-1c"]
+            "AvailabilityZones": ["us-east-1c"],
+            "KeyName": "StreamFrameworkBench"
         },
         "CassandraMap": {
             "AMI" : "ami-711ca91a",
@@ -53,7 +54,7 @@
       "Properties": {
         "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "CassandraMap", "AMI" ]},
         "InstanceType": { "Fn::FindInMap" : [ "BenchMap", "CassandraMap", "InstanceType" ]},
-        "KeyName": "StreamFrameworkBench",
+        "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
         "SecurityGroups": [{ "Ref" : "CassandraSecurityGroup" }],
         "UserData": { 
             "Fn::Base64":  "--clustername benchmark --totalnodes 1 --version community --release 2.2.5 --repository https://github.com/riptano/ComboAMI#2.6.3 --bootstrap --opscenter no"
@@ -92,7 +93,7 @@
       "Properties": {
         "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "RabbitMap", "AMI" ]},
         "InstanceType": { "Fn::FindInMap" : [ "BenchMap", "RabbitMap", "InstanceType" ]},
-        "KeyName": "StreamFrameworkBench",
+        "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
         "SecurityGroups": [{ "Ref" : "RabbitSecurityGroup" }]
       }
     },
@@ -128,11 +129,17 @@
       "Properties": {
         "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "CeleryMap", "AMI" ]},
         "InstanceType": { "Fn::FindInMap" : [ "BenchMap", "CeleryMap", "InstanceType" ]},
-        "KeyName": "StreamFrameworkBench",
+        "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
         "SecurityGroups": [{ "Ref" : "CelerySecurityGroup" }]
       }
     }
     
+  },
+  "Outputs" : {
+    "CassandraDnsName" : {
+      "Value" : { "Fn::GetAtt" : [ "WebServer", "PublicDnsName" ]},
+      "Description" : "CassandraDnsName"
+    }
   }
   
 }

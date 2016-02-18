@@ -37,6 +37,13 @@ def create_activity(user_id, object_id):
 class SocialModel(object):
     '''
     Basic assumptions about our social network
+    Nothing is random to ensure we create the same scenario every time we run the test
+    
+    Makes assumptions about:
+    - How many activities do the active users create?
+    - How many users follow these users?
+    - How many pages do they request when browsing their feed?
+    
     '''
     active_users_percentage = 15
     
@@ -101,7 +108,8 @@ def run_benchmark(start_users, max_users, multiplier, duration):
             # create load based on the current model
             active_users = social_model.active_users
             for user_id in active_users:
-                # follow other users
+                # follow other users, note that we don't actually store the follower
+                #  lists for this benchmark
                 for x in range(2):
                     tasks.follow_user(user_id, object_id % user_id)
                 # create activities

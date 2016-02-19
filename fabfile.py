@@ -41,10 +41,3 @@ def delete_stack(stack):
     print response
         
         
-def sync_cassandra():
-    from cassandra.cqlengine.management import sync_table, create_keyspace
-    from benchmark.feeds import UserFeed, TimelineFeed
-    create_keyspace('stream_framework', 'SimpleStrategy', 3)
-    for feed_class in [UserFeed, TimelineFeed]:
-        timeline = feed_class.get_timeline_storage()
-        sync_table(timeline.model)

@@ -84,7 +84,14 @@ def run_benchmark(start_users, max_users, multiplier, duration):
             logger.info('Reached the max users, we\'re done with our benchmark!')
 
 
-
+def sync_cassandra():
+    from cassandra.cqlengine.management import sync_table, create_keyspace
+    from benchmark.feeds import UserFeed, TimelineFeed
+    create_keyspace('stream_framework_bench', 'SimpleStrategy', 3)
+    for feed_class in [UserFeed, TimelineFeed]:
+        timeline = feed_class.get_timeline_storage()
+        sync_table(timeline.model)
+        
 def create_activity(user_id, object_id):
     verbs = get_verb_storage()
     verb = verbs.values()[user_id % len(verbs)]
@@ -147,6 +154,7 @@ class SocialModel(object):
     
         
 if __name__ == '__main__':
+    sync_cassandra()
     run_benchmark()
         
         

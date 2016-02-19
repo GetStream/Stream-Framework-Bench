@@ -42,6 +42,8 @@ class SocialModel(object):
     Makes assumptions about:
     - How many activities do the active users create?
     - How many users follow these users?
+    Average follow count should increase with network size up to a steady state of followers (S-shaped curve)
+    Using Facebook numbers: Steady state average follow count = 338
     - How many pages do they request when browsing their feed?
     
     '''

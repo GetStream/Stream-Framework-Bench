@@ -66,7 +66,7 @@ def run_benchmark(start_users, max_users, multiplier, duration):
             for user_id in active_users:
                 # follow other users, note that we don't actually store the follower
                 #  lists for this benchmark
-                for x in range(2):
+                for x in range(social_model.get_new_follows(user_id)):
                     tasks.follow_user(social_model, user_id, object_id % user_id)
                 # create activities
                 for x in range(social_model.get_user_activity(user_id)):
@@ -84,7 +84,14 @@ def run_benchmark(start_users, max_users, multiplier, duration):
             logger.info('Reached the max users, we\'re done with our benchmark!')
 
 
-
+def sync_cassandra():
+    from cassandra.cqlengine.management import sync_table, create_keyspace
+    from benchmark.feeds import UserFeed, TimelineFeed
+    create_keyspace('stream_framework_bench', 'SimpleStrategy', 3)
+    for feed_class in [UserFeed, TimelineFeed]:
+        timeline = feed_class.get_timeline_storage()
+        sync_table(timeline.model)
+        
 def create_activity(user_id, object_id):
     verbs = get_verb_storage()
     verb = verbs.values()[user_id % len(verbs)]
@@ -124,12 +131,18 @@ class SocialModel(object):
         For a given user_id, how many pages does this user browse?
         '''
         return 4
-
+    
     def get_user_activity(self, user_id):
         '''
         For a given user_id, how many activities does this user produce during the day?
         '''
         return 4
+    
+    def get_new_follows(self, user_id):
+        '''
+        For a given user, how many new users do they follow during the day?
+        '''
+        return 2
     
     def get_follower_ids(self, user_id):
         '''
@@ -137,14 +150,11 @@ class SocialModel(object):
         This also depends on the network size
         '''
         user_popularity = user_id % 10 + 1
-        return range(5)
+        return range(user_popularity)
     
-
-
-
-        
         
 if __name__ == '__main__':
+    sync_cassandra()
     run_benchmark()
         
         

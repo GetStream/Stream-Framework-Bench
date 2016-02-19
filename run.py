@@ -11,6 +11,7 @@ from stream_framework.verbs import get_verb_storage
 import time
 import click
 from logging.config import dictConfig
+from math import atan, pi
 
 logger = logging.getLogger('bench')
 
@@ -126,24 +127,65 @@ class SocialModel(object):
         active_users = [u for u in range(1, self.users) if u % 100 < self.daily_active_users_percentage]
         return active_users
 
-    def get_browse_depth(self, user_id):
+    def get_browse_depth(self, user_id, network_size):
         '''
-        For a given user_id, how many pages does this user browse?
+        For a given user_id and network_size, how many pages does this user browse?
         '''
-        return 4
-    
+        if network_size < 1000:
+            return user_id % 2
+        else:
+            bin_number = user_id % 1000
+            if 995 <= bin_number:
+                return 50
+            if 985 <= bin_number < 995:
+                return 20
+            if 965 <= bin_number < 985:
+                return 10
+            if 935 <= bin_number < 965:
+                return 5
+            if 735 <= bin_number < 935:
+                return 1
+            else:
+                return 0
+
     def get_user_activity(self, user_id):
         '''
         For a given user_id, how many activities does this user produce during the day?
         '''
-        return 4
-    
-    def get_new_follows(self, user_id):
+        bin_number = user_id % 1000
+        if 995 <= bin_number:
+            return 25
+        if 985 <= bin_number < 995:
+            return 10
+        if 965 <= bin_number < 985:
+            return 5
+        if 935 <= bin_number < 965:
+            return 2.5
+        if 735 <= bin_number < 935:
+            return .5
+        else:
+            return 0
+
+    def get_new_follows(self, user_id, network_size, scaling=1):
         '''
         For a given user, how many new users do they follow during the day?
         '''
-        return 2
-    
+        bin_number = (user_id/network_size)*100
+
+        if bin_number <= 90:
+            #No growth
+            return 0
+        if 89 < bin_number <= 99:
+            avg_friends = 338 #steady state for active users
+            #S-shaped growth on network size
+            return avg_friends*(atan((network_size-250000000*scaling)/150000000*scaling) + pi/2)/pi - \
+            avg_friends*(atan((network_size/2-250000000*scaling)/150000000*scaling) + pi/2)/pi
+
+        else:
+            #Linear growth on network size
+            proportion_active_users = .1
+            return .25*network_size*proportion_active_users - .25*network_size/2*proportion_active_users
+
     def get_follower_ids(self, user_id):
         '''
         For a given user_id, how many followers does this user have?

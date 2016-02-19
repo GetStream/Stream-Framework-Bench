@@ -13,14 +13,39 @@ from stream_framework.verbs import get_verb_storage
 import boto3
 import time
 import click
+from logging.config import dictConfig
 
+logger = logging.getLogger('bench')
 
-logger = logging.getLogger()
-handler = logging.StreamHandler()
-handler.setFormatter(
-    logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s"))
-logger.addHandler(handler)
-logger.setLevel('INFO')
+LOGGING_DICT = { 
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': { 
+        'standard': { 
+            'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+        },
+    },
+    'handlers': { 
+        'console': { 
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': { 
+        '': { 
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False
+        },
+        'bench': { 
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+    } 
+}
+dictConfig(LOGGING_DICT)
+
 
 
 def create_activity(user_id, object_id):
@@ -63,6 +88,9 @@ class SocialModel(object):
     def get_follower_ids(self, user_id):
         user_popularity = user_id % 10 + 1
         return range(5)
+    
+    def get_browse_depth(self, user_id):
+        return 4
 
 
 
@@ -103,24 +131,27 @@ def run_benchmark(start_users, max_users, multiplier, duration):
     logger.info('Synced the cassandra schema, all good')
     
     social_model = SocialModel(users=start_users)
+    days = 0
     while True:
         logger.info('Simulating a social network with %s users', social_model.users)
         object_id = 1
         for x in range(duration):
+            days += 1
+            logger.debug('Day %s for our network', days)
             # create load based on the current model
             active_users = social_model.active_users
             for user_id in active_users:
                 # follow other users, note that we don't actually store the follower
                 #  lists for this benchmark
                 for x in range(2):
-                    tasks.follow_user(user_id, object_id % user_id)
+                    tasks.follow_user(social_model, user_id, object_id % user_id)
                 # create activities
                 for x in range(social_model.get_user_activity(user_id)):
                     activity = create_activity(user_id, object_id)
                     object_id += 1
-                    tasks.add_user_activity.delay(user_id, activity)
+                    tasks.add_user_activity.delay(social_model, user_id, activity)
                 # read a few pages of data
-                tasks.read_feed_pages(user_id)
+                tasks.read_feed_pages(social_model, user_id)
             time.sleep(1)
                 
         # grow the network

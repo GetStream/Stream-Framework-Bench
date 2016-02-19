@@ -134,12 +134,6 @@
       }
     }
     
-  },
-  "Outputs" : {
-    "CassandraDnsName" : {
-      "Value" : { "Fn::GetAtt" : [ "WebServer", "PublicDnsName" ]},
-      "Description" : "CassandraDnsName"
-    }
   }
   
 }

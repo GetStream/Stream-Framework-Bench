@@ -4,13 +4,9 @@ sys.path.insert(0, os.path.dirname(__file__))
 os.environ["DJANGO_SETTINGS_MODULE"] = "benchmark.settings"
 from django.conf import settings
 from stream_framework.activity import Activity
-from stream_framework.verbs.base import Add
-from benchmark.feeds import UserFeed, TimelineFeed
-from cassandra.cqlengine.management import sync_table, create_keyspace
 from benchmark import tasks
 import logging
 from stream_framework.verbs import get_verb_storage
-import boto3
 import time
 import click
 from logging.config import dictConfig
@@ -70,9 +66,9 @@ class SocialModel(object):
     Average follow count should increase with network size up to a steady state of followers (S-shaped curve)
     Using Facebook numbers: Steady state average follow count = 338
     - How many pages do they request when browsing their feed?
-    
     '''
-    active_users_percentage = 15
+    VERSION = 0.1
+    daily_active_users_percentage = 10
     
     def __init__(self, users=100):
         self.users = users
@@ -82,40 +78,33 @@ class SocialModel(object):
         active_users = [u for u in range(1, self.users) if u % 100 < self.active_users_percentage]
         return active_users
 
+    def get_browse_depth(self, user_id):
+        '''
+        For a given user_id, how many pages does this user browse?
+        '''
+        return 4
+
     def get_user_activity(self, user_id):
+        '''
+        For a given user_id, how many activities does this user produce during the day?
+        '''
         return 4
     
     def get_follower_ids(self, user_id):
+        '''
+        For a given user_id, how many followers does this user have?
+        This also depends on the network size
+        '''
         user_popularity = user_id % 10 + 1
         return range(5)
     
-    def get_browse_depth(self, user_id):
-        return 4
 
 
 
-def validate_cloudformation_files():
-    client = boto3.client('cloudformation')
-    
-    current_dir = os.path.dirname(__file__)
-    cloudformation_dir = os.path.join(current_dir, 'cloudformation')
-    cloudformation_files = []
-    for (dirpath, dirnames, filenames) in os.walk(cloudformation_dir):
-        cloudformation_files = [f for f in filenames if f.endswith('.json')]
-        break
-    
-    for filename in cloudformation_files:
-        print 'validating', filename
-        file_path = os.path.join(cloudformation_dir, filename)
-        template_body = open(file_path).read()
-        client.validate_template(TemplateBody=template_body)
+
         
         
-def sync_cassandra():
-    create_keyspace('stream_framework', 'SimpleStrategy', 3)
-    for feed_class in [UserFeed, TimelineFeed]:
-        timeline = feed_class.get_timeline_storage()
-        sync_table(timeline.model)
+
         
 
 
@@ -161,11 +150,7 @@ def run_benchmark(start_users, max_users, multiplier, duration):
             logger.info('Reached the max users, we\'re done with our benchmark!')
         
         
-        
-
 if __name__ == '__main__':
-    
-    
     run_benchmark()
         
         

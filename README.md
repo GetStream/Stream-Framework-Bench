@@ -17,11 +17,11 @@ Configure your credentials file
 https://boto3.readthedocs.org/en/latest/guide/quickstart.html#configuration
 
 Start the cluster on AWS (warning, this is expensive)
-fab launch_stack cassandra
+fab create_stack:stack=cassandra
 
 # Running the benchmark using stream framework
 
-fab start_bench cassandra
+fab run_bench:stack=cassandra
 
 The benchmark will slowly increase the number of users in the graph
 and measure:
@@ -31,8 +31,7 @@ and measure:
 
 # Stopping the stack
 
-go to your AWS cloudformation dashboard and shut down the stack.
-(be careful not to shutdown the wrong stack)
+fab delete_stack:stack=cassandra
 
 # Testing a different database backend
 

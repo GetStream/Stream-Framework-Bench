@@ -1,4 +1,5 @@
 import os
+import boto3
 
 
 def validate():
@@ -6,7 +7,6 @@ def validate():
 
 
 def validate_cloudformation_files():
-    import boto3
     client = boto3.client('cloudformation')
     
     current_dir = os.path.dirname(__file__)
@@ -21,6 +21,24 @@ def validate_cloudformation_files():
         file_path = os.path.join(cloudformation_dir, filename)
         template_body = open(file_path).read()
         client.validate_template(TemplateBody=template_body)
+        
+        
+def create_stack(stack):
+    validate()
+    client = boto3.client('cloudformation')
+    current_dir = os.path.dirname(__file__)
+    cloudformation_dir = os.path.join(current_dir, 'cloudformation')
+    template_path = os.path.join(cloudformation_dir, '%s.json' % stack)
+    template_body = open(template_path).read()
+    response = client.create_stack(StackName='stream-bench-%s' % stack, TemplateBody=template_body)
+    print response
+    
+    
+def delete_stack(stack):
+    validate()
+    client = boto3.client('cloudformation')
+    response = client.delete_stack(StackName='stream-bench-%s' % stack)
+    print response
         
         
 def sync_cassandra():

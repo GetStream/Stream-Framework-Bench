@@ -1,12 +1,12 @@
 from math import atan, pi
 
 
-def number_of_pages(id, network_size):
+def number_of_pages(user_id, network_size):
 
     if network_size < 1000:
-        return id % 2
+        return user_id % 2
     else:
-        bin_number = (id/network_size)*1000
+        bin_number = (user_id/network_size)*1000
         if 995 <= bin_number:
             return 50
         if 985 <= bin_number < 995:
@@ -21,9 +21,9 @@ def number_of_pages(id, network_size):
             return 0
 
 
-def number_of_friends(id, network_size, scaling=1):
+def number_of_friends(user_id, network_size, scaling=1):
 
-    bin_number = (id/network_size)*100
+    bin_number = (user_id/network_size)*100
 
     if bin_number <= 90:
         #No growth
@@ -38,9 +38,9 @@ def number_of_friends(id, network_size, scaling=1):
         return .25*network_size*proportion_active_users
 
 
-def number_of_activities(id, network_size):
+def number_of_activities(user_id, network_size):
 
-    bin_number = (id/network_size)*100
+    bin_number = (user_id/network_size)*100
 
     if bin_number <= 89:
         return 0

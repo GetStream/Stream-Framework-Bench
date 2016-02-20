@@ -1,6 +1,9 @@
 import os
 import boto3
 from fabric.api import run
+from collections import defaultdict
+from fabric.state import env
+from fabric.tasks import execute
 
 
 def validate():
@@ -43,14 +46,30 @@ def delete_stack(stack):
     print response
 
 
-def get_ec2_instances(tags):
-    reservations = connection.get_all_instances(filters=tags)
-    dns_names = []
+def get_ec2_instances(stack, logical_id):
+    client = boto3.client('ec2')
+    tags = {
+        'tag:aws:cloudformation:stack-name': 'stream-bench-%s' % stack,
+        'tag:aws:cloudformation:logical-id': logical_id
+    }
+    
+    # create the filters
+    filters = []
+    for tag_name, tag_value in tags.items():
+        filter = {'Name': tag_name, 'Values': [tag_value]}
+        filters.append(filter)
+        
+    reservations = client.describe_instances(Filters=filters)['Reservations']
+    instance_dict = defaultdict(list)
+    
     for r in reservations:
-        for i in r.instances:
-            if i.state in ['running'] and i.public_dns_name:
-                dns_names.append(i.public_dns_name)
-    return dns_names
+        for i in r['Instances']:
+            instance_dict[i['State']['Name']].append(i['PublicDnsName'])
+
+    return instance_dict
+
+def _run_bench():
+    run('python run.py --start-users=10000 --max-users=10000000 --multiplier=2 --duration=10')
 
 
 def run_bench(stack):
@@ -58,8 +77,5 @@ def run_bench(stack):
     Log into the RabbitMQ machine
     Execute python run.py with production settings
     '''
-    tags = {
-        'tag:aws:cloudformation:stack-name': 'stream-bench-cassandra',
-        'tag:aws:cloudformation:logical-id': 'RabbitAutoScaling'
-    }
-    run('python run.py --start-users=10000 --max-users=10000000 --multiplier=2 --duration=10')
+    instance_dict = get_ec2_instances(stack, logical_id='RabbitAutoScaling')
+    execute(_run_bench, hosts=instance_dict['running'])

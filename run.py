@@ -193,7 +193,9 @@ class SocialModel(object):
             num_followers = .25*network_size*proportion_active_users - .25*network_size/2*proportion_active_users
 
         user_popularity = user_id % 10 + 1
-        return range(num_followers)
+        follower_ids = range(num_followers)
+        follower_ids = [(user_id*pi)%network_size for user_id in follower_ids]
+        return follower_ids
     
         
 if __name__ == '__main__':

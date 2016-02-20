@@ -166,33 +166,34 @@ class SocialModel(object):
         else:
             return 0
 
-    def get_new_follows(self, user_id, network_size, scaling=1):
+    def get_new_follows(self, user_id, network_size):
         '''
         For a given user, how many new users do they follow during the day?
+        '''
+        return (user_id+123456789) % network_size
+
+    def get_follower_ids(self, user_id, network_size, scaling=1):
+        '''
+        For a given user_id, how many followers does this user have?
+        This also depends on the network size
         '''
         bin_number = (user_id/network_size)*100
 
         if bin_number <= 90:
             #No growth
-            return 0
+            num_followers = 0
         if 89 < bin_number <= 99:
             avg_friends = 338 #steady state for active users
             #S-shaped growth on network size
-            return avg_friends*(atan((network_size-250000000*scaling)/150000000*scaling) + pi/2)/pi - \
-            avg_friends*(atan((network_size/2-250000000*scaling)/150000000*scaling) + pi/2)/pi
+            num_followers = avg_friends*(atan((network_size-250000000*scaling)/150000000*scaling) + pi/2)/pi
 
         else:
             #Linear growth on network size
             proportion_active_users = .1
-            return .25*network_size*proportion_active_users - .25*network_size/2*proportion_active_users
+            num_followers = .25*network_size*proportion_active_users - .25*network_size/2*proportion_active_users
 
-    def get_follower_ids(self, user_id):
-        '''
-        For a given user_id, how many followers does this user have?
-        This also depends on the network size
-        '''
         user_popularity = user_id % 10 + 1
-        return range(user_popularity)
+        return range(num_followers)
     
         
 if __name__ == '__main__':

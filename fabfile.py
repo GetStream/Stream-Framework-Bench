@@ -5,35 +5,46 @@ from collections import defaultdict
 from fabric.state import env
 from fabric.tasks import execute
 
+BASE_DIR = os.path.dirname(__file__)
+CLOUDFORMATION_DIR = os.path.join(BASE_DIR, 'cloudformation')
+    
 
 def validate():
     validate_cloudformation_files()
+    
+    
+def read_available_templates():
+    cloudformation_templates = {}
+    cloudformation_files = []
+    for (dirpath, dirnames, filenames) in os.walk(CLOUDFORMATION_DIR):
+        cloudformation_files = [f for f in filenames if f.endswith('.template')]
+        break
+    for filename in cloudformation_files:
+        name = filename.split('.')[0]
+        cloudformation_templates[filename] = read_template(name)
+    return cloudformation_templates
+
+def read_template(name):
+    current_dir = os.path.dirname(__file__)
+    cloudformation_dir = os.path.join(current_dir, 'cloudformation')
+    template_path = os.path.join(cloudformation_dir, '%s.template' % name)
+    template_body = open(template_path).read()
+    return template_body
 
 
 def validate_cloudformation_files():
     client = boto3.client('cloudformation')
+    cloudformation_templates = read_available_templates()
 
-    current_dir = os.path.dirname(__file__)
-    cloudformation_dir = os.path.join(current_dir, 'cloudformation')
-    cloudformation_files = []
-    for (dirpath, dirnames, filenames) in os.walk(cloudformation_dir):
-        cloudformation_files = [f for f in filenames if f.endswith('.json')]
-        break
-
-    for filename in cloudformation_files:
-        print 'validating', filename
-        file_path = os.path.join(cloudformation_dir, filename)
-        template_body = open(file_path).read()
+    for name, template_body in cloudformation_templates.items():
+        print 'validating', name
         client.validate_template(TemplateBody=template_body)
 
 
 def create_stack(stack):
     validate()
     client = boto3.client('cloudformation')
-    current_dir = os.path.dirname(__file__)
-    cloudformation_dir = os.path.join(current_dir, 'cloudformation')
-    template_path = os.path.join(cloudformation_dir, '%s.json' % stack)
-    template_body = open(template_path).read()
+    template_body = read_template(stack)
     response = client.create_stack(
         StackName='stream-bench-%s' % stack, TemplateBody=template_body)
     print response

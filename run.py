@@ -16,34 +16,35 @@ from math import atan, pi
 
 logger = logging.getLogger('bench')
 
-LOGGING_DICT = { 
+LOGGING_DICT = {
     'version': 1,
     'disable_existing_loggers': True,
-    'formatters': { 
-        'standard': { 
+    'formatters': {
+        'standard': {
             'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
         },
     },
-    'handlers': { 
-        'console': { 
+    'handlers': {
+        'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
         },
     },
-    'loggers': { 
-        '': { 
+    'loggers': {
+        '': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': False
         },
-        'bench': { 
+        'bench': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': False
         },
-    } 
+    }
 }
 dictConfig(LOGGING_DICT)
+
 
 @click.command()
 @click.option('--start-users', default=10, help='Number of greetings.')
@@ -54,11 +55,12 @@ def run_benchmark(start_users, max_users, multiplier, duration):
     logger.info('Starting the benchmark! Exciting.... :)')
     logger.info('Running with settings %s', locals())
     logger.info('Synced the cassandra schema, all good')
-    
+
     social_model = SocialModel(users=start_users)
     days = 0
     while True:
-        logger.info('Simulating a social network with %s users', social_model.users)
+        logger.info(
+            'Simulating a social network with %s users', social_model.users)
         object_id = 1
         for x in range(duration):
             days += 1
@@ -69,21 +71,24 @@ def run_benchmark(start_users, max_users, multiplier, duration):
                 # follow other users, note that we don't actually store the follower
                 #  lists for this benchmark
                 for x in range(social_model.get_new_follows(user_id)):
-                    tasks.follow_user(social_model, user_id, object_id % user_id)
+                    tasks.follow_user(
+                        social_model, user_id, object_id % user_id)
                 # create activities
                 for x in range(social_model.get_user_activity(user_id)):
                     activity = create_activity(user_id, object_id)
                     object_id += 1
-                    tasks.add_user_activity.delay(social_model, user_id, activity)
+                    tasks.add_user_activity.delay(
+                        social_model, user_id, activity)
                 # read a few pages of data
                 tasks.read_feed_pages(social_model, user_id)
             time.sleep(1)
-                
+
         # grow the network
         logger.info('Growing the social network.....')
         social_model.users = social_model.users * multiplier
         if social_model.users > max_users:
-            logger.info('Reached the max users, we\'re done with our benchmark!')
+            logger.info(
+                'Reached the max users, we\'re done with our benchmark!')
 
 
 def sync_cassandra():
@@ -93,7 +98,8 @@ def sync_cassandra():
     for feed_class in [UserFeed, TimelineFeed]:
         timeline = feed_class.get_timeline_storage()
         sync_table(timeline.model)
-        
+
+
 def create_activity(user_id, object_id):
     verbs = get_verb_storage()
     verb = verbs.values()[user_id % len(verbs)]
@@ -105,10 +111,6 @@ def create_activity(user_id, object_id):
     return activity
 
 
-
-        
 if __name__ == '__main__':
     sync_cassandra()
     run_benchmark()
-        
-        

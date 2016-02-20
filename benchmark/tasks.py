@@ -2,6 +2,7 @@ from benchmark.celery import app
 from benchmark.manager import benchmark_manager
 from benchmark import feeds
 
+
 @app.task(bind=True, ignore_result=True)
 def add_user_activity(self, social_model, user_id, activity):
     # inserts into cassandra and creates the fanout tasks
@@ -14,7 +15,7 @@ def read_feed_pages(self, social_model, user_id):
     browse_depth = social_model.get_browse_depth(user_id)
     feed_instance = feeds.TimelineFeed(user_id)
 
-    # browse x pages deep    
+    # browse x pages deep
     for page in range(browse_depth):
         activities = feed_instance[:25]
         if activities and len(activities) == 25:
@@ -22,8 +23,10 @@ def read_feed_pages(self, social_model, user_id):
             feed_instance.filter(id__lte=last_id)
         else:
             break
-        
+
+
 @app.task(bind=True, ignore_result=True)
 def follow_user(self, social_model, user_id, target_user_id):
-    # user a follows user b. since we're already in a task, run with async=False
+    # user a follows user b. since we're already in a task, run with
+    # async=False
     benchmark_manager.follow_user(user_id, target_user_id, async=False)

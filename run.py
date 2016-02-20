@@ -70,9 +70,9 @@ def run_benchmark(start_users, max_users, multiplier, duration):
             for user_id in active_users:
                 # follow other users, note that we don't actually store the follower
                 #  lists for this benchmark
-                for x in range(social_model.get_new_follows(user_id)):
+                for target_user_id in social_model.get_new_follows(user_id):
                     tasks.follow_user(
-                        social_model, user_id, object_id % user_id)
+                        social_model, user_id, target_user_id)
                 # create activities
                 for x in range(social_model.get_user_activity(user_id)):
                     activity = create_activity(user_id, object_id)

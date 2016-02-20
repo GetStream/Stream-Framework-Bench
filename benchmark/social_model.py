@@ -70,7 +70,23 @@ class SocialModel(object):
         '''
         For a given user, how many new users do they follow during the day?
         '''
-        return (user_id + 123456789) % self.users
+        bin_number = user_id % 1000
+        if 995 <= bin_number:
+            new_follows = 25
+        elif 985 <= bin_number < 995:
+            new_follows = 10
+        elif 965 <= bin_number < 985:
+            new_follows = 5
+        elif 935 <= bin_number < 965:
+            new_follows = 2
+        elif 735 <= bin_number < 935:
+            new_follows = 1
+        else:
+            new_follows = 0
+        follower_ids = range(new_follows)
+        follower_ids = [(user_id * pi) %
+                        self.users for user_id in follower_ids]
+        return follower_ids
 
     def get_follower_ids(self, user_id, network_size, scaling=1):
         '''

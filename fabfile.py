@@ -1,6 +1,6 @@
 import os
 import boto3
-
+from fabric.api import run
 
 def validate():
     validate_cloudformation_files()
@@ -39,5 +39,26 @@ def delete_stack(stack):
     client = boto3.client('cloudformation')
     response = client.delete_stack(StackName='stream-bench-%s' % stack)
     print response
+    
+    
+def get_ec2_instances(tags):
+    reservations = connection.get_all_instances(filters=tags)
+    dns_names = []
+    for r in reservations:
+        for i in r.instances:
+            if i.state in ['running'] and i.public_dns_name:
+                dns_names.append(i.public_dns_name)
+    return dns_names
+    
+def run_bench(stack):
+    '''
+    Log into the RabbitMQ machine
+    Execute python run.py with production settings
+    '''
+    tags = {
+        'tag:aws:cloudformation:stack-name': 'stream-bench-cassandra',
+        'tag:aws:cloudformation:logical-id': 'RabbitAutoScaling'
+    }
+    run('python run.py --start-users=10000 --max-users=10000000 --multiplier=2 --duration=10')
         
         

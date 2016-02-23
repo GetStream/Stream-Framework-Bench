@@ -12,3 +12,10 @@ BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 
 CELERY_ALWAYS_EAGER = True
 DEBUG = True
+
+STREAM_METRIC_CLASS = 'benchmark.metrics.BenchMetrics'
+STREAM_METRICS_OPTIONS = {
+    'host': 'localhost',
+    'port': 8125,
+    'prefix': 'stream'
+}

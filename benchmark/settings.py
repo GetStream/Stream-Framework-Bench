@@ -10,7 +10,7 @@ STREAM_CASSANDRA_HOSTS = [
 # configure the broker url
 BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 
-CELERY_ALWAYS_EAGER = False
+CELERY_ALWAYS_EAGER = True
 CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
 DEBUG = True
 
@@ -28,3 +28,12 @@ INSTALLED_APPS = [
 # we need to fake this, required by celery + django lib
 # urls.py is empty
 ROOT_URLCONF = 'benchmark.urls'
+
+
+import os
+environment = os.environ.get('ENVIRONMENT')
+
+# production settings
+if environment == 'production':
+    DEBUG = False
+    CELERY_ALWAYS_EAGER = False

@@ -88,11 +88,12 @@ class SocialModel(object):
                         self.users for user_id in follower_ids]
         return follower_ids
 
-    def get_follower_ids(self, user_id, network_size, scaling=1):
+    def get_follower_ids(self, user_id, scaling=1):
         '''
         For a given user_id, how many followers does this user have?
         This also depends on the network size
         '''
+        network_size = self.users
         bin_number = (user_id / network_size) * 100
 
         if bin_number <= 90:
@@ -112,7 +113,7 @@ class SocialModel(object):
                 network_size / 2 * proportion_active_users
 
         user_popularity = user_id % 10 + 1
-        follower_ids = range(num_followers)
+        follower_ids = range(int(num_followers))
         follower_ids = [(user_id * pi) %
                         network_size for user_id in follower_ids]
         return follower_ids

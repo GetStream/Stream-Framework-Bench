@@ -10,7 +10,8 @@ STREAM_CASSANDRA_HOSTS = [
 # configure the broker url
 BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 
-CELERY_ALWAYS_EAGER = True
+CELERY_ALWAYS_EAGER = False
+CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
 DEBUG = True
 
 STREAM_METRIC_CLASS = 'benchmark.metrics.BenchMetrics'
@@ -19,3 +20,11 @@ STREAM_METRICS_OPTIONS = {
     'port': 8125,
     'prefix': 'stream'
 }
+
+INSTALLED_APPS = [
+    'benchmark'
+]
+
+# we need to fake this, required by celery + django lib
+# urls.py is empty
+ROOT_URLCONF = 'benchmark.urls'

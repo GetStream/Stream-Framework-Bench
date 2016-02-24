@@ -1,0 +1,4 @@
+class bench_celery {
+
+
+}

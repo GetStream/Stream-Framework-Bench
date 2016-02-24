@@ -12,11 +12,11 @@
             "InstanceType": "i2.xlarge"
         },
         "RabbitMap": {
-            "AMI" : "ami-8fcee4e5",
+            "AMI" : "ami-fce3c696",
             "InstanceType": "t2.micro"
         },
         "CeleryMap": {
-            "AMI" : "ami-8fcee4e5",
+            "AMI" : "ami-fce3c696",
             "InstanceType": "t2.micro"
         }
     }

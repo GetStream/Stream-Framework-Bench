@@ -5,7 +5,8 @@
     "BenchMap": {
         "SettingsMap": {
             "AvailabilityZones": ["us-east-1c"],
-            "KeyName": "StreamFrameworkBench"
+            "KeyName": "StreamFrameworkBench",
+            "GitRepo": "https://github.com/getstream/stream-framework-bench"
         },
         "CassandraMap": {
             "AMI" : "ami-711ca91a",
@@ -131,7 +132,30 @@
         "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "CeleryMap", "AMI" ]},
         "InstanceType": { "Fn::FindInMap" : [ "BenchMap", "CeleryMap", "InstanceType" ]},
         "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
-        "SecurityGroups": [{ "Ref" : "BenchmarkSecurityGroup" }]
+        "SecurityGroups": [{ "Ref" : "BenchmarkSecurityGroup" }],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash",
+                "\n",
+                "set -o errexit",
+                "\n",
+                "sudo apt-get install git-client -y",
+                "\n",
+                "echo '{\"role\": \"celery\"}' > /etc/facter/facts.d/roles.json",
+                "mkdir -p /srv/bench/; cd /srv/bench/",
+                "\n",
+                "sudo -u stream /usr/bin/git clone ",
+                {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "GitRepo" ]},
+                "\n",
+                "/usr/bin/puppet apply --modulepath=/srv/bench/puppet/modules/ /srv/bench/puppet/manifests/bench.pp",
+                "\n"
+              ]
+            ]
+          }
+        }
       }
     }
     

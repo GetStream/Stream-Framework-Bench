@@ -12,24 +12,36 @@
             "InstanceType": "i2.xlarge"
         },
         "RabbitMap": {
-            "AMI" : "ami-fce3c696",
+            "AMI" : "ami-8fcee4e5",
             "InstanceType": "t2.micro"
         },
         "CeleryMap": {
-            "AMI" : "ami-fce3c696",
+            "AMI" : "ami-8fcee4e5",
             "InstanceType": "t2.micro"
         }
     }
   },
   "Resources": {
 
+    "BenchmarkSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "SSH access",
+        "SecurityGroupIngress" : [
+          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"}
+        ]
+      }
+    },
+
     "CassandraSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
-        "GroupDescription" : "Enable HTTP access via port 80 and SSH access",
+        "GroupDescription" : "Cassandra ports",
         "SecurityGroupIngress" : [
-          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"},
-          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"}
+          {"IpProtocol" : "tcp", "FromPort" : "7000", "ToPort" : "7000", "SourceSecurityGroupName" : {"Ref" : "BenchmarkSecurityGroup"}},
+          {"IpProtocol" : "tcp", "FromPort" : "7199", "ToPort" : "7199", "SourceSecurityGroupName" : {"Ref" : "BenchmarkSecurityGroup"}},
+          {"IpProtocol" : "tcp", "FromPort" : "9042", "ToPort" : "9042", "SourceSecurityGroupName" : {"Ref" : "BenchmarkSecurityGroup"}},
+          {"IpProtocol" : "tcp", "FromPort" : "9160", "ToPort" : "9160", "SourceSecurityGroupName" : {"Ref" : "BenchmarkSecurityGroup"}}
         ]
       }
     },
@@ -55,7 +67,7 @@
         "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "CassandraMap", "AMI" ]},
         "InstanceType": { "Fn::FindInMap" : [ "BenchMap", "CassandraMap", "InstanceType" ]},
         "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
-        "SecurityGroups": [{ "Ref" : "CassandraSecurityGroup" }],
+        "SecurityGroups": [{ "Ref" : "CassandraSecurityGroup" }, { "Ref" : "BenchmarkSecurityGroup" }],
         "UserData": { 
             "Fn::Base64":  "--clustername benchmark --totalnodes 1 --version community --release 2.2.5 --repository https://github.com/riptano/ComboAMI#2.6.3 --bootstrap --opscenter no"
         }
@@ -65,10 +77,10 @@
     "RabbitSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
-        "GroupDescription" : "Enable HTTP access via port 80 and SSH access",
+        "GroupDescription" : "RabbitMQ ports",
         "SecurityGroupIngress" : [
-          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"},
-          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"}
+          {"IpProtocol" : "tcp", "FromPort" : "15672", "ToPort" : "15672", "SourceSecurityGroupName" : {"Ref" : "BenchmarkSecurityGroup"}},
+          {"IpProtocol" : "tcp", "FromPort" : "5672", "ToPort" : "5672", "SourceSecurityGroupName" : {"Ref" : "BenchmarkSecurityGroup"}}
         ]
       }
     },
@@ -94,21 +106,10 @@
         "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "RabbitMap", "AMI" ]},
         "InstanceType": { "Fn::FindInMap" : [ "BenchMap", "RabbitMap", "InstanceType" ]},
         "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
-        "SecurityGroups": [{ "Ref" : "RabbitSecurityGroup" }]
+        "SecurityGroups": [{ "Ref" : "RabbitSecurityGroup" }, { "Ref" : "BenchmarkSecurityGroup" }]
       }
     },
     
-    "CelerySecurityGroup" : {
-      "Type" : "AWS::EC2::SecurityGroup",
-      "Properties" : {
-        "GroupDescription" : "Enable HTTP access via port 80 and SSH access",
-        "SecurityGroupIngress" : [
-          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"},
-          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"}
-        ]
-      }
-    },
-  
     "CeleryAutoScaling": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "Properties": {
@@ -130,7 +131,7 @@
         "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "CeleryMap", "AMI" ]},
         "InstanceType": { "Fn::FindInMap" : [ "BenchMap", "CeleryMap", "InstanceType" ]},
         "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
-        "SecurityGroups": [{ "Ref" : "CelerySecurityGroup" }]
+        "SecurityGroups": [{ "Ref" : "BenchmarkSecurityGroup" }]
       }
     }
     

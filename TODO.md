@@ -1,8 +1,9 @@
 # TODO tech
 
-* Instance configuration via Puppet or shell (Rabbit & Celery workers)
-* Verify Cassandra, Cassandra3 and ScyllaDB instances work
-* Verify Stream-Framwork test suite passes against ScyllaDB
+* Security group setup
+* Start with AWS instance or Ubuntu instance
+* Instance configuration via Puppet or alternative (Rabbit & Celery workers)
+
 * Making sure the instances can find RabbitMQ and Cassandra
 * Add tracking metrics for read time and fanout delay
 * Store the tracking metrics (redis/cloudwatch?)
@@ -11,7 +12,6 @@
 
 # TODO tech - phase 2
 
-* Create a backend for Aerospike
 * Simplify the process for adding backends and document it well
 
 

@@ -1,27 +1,37 @@
 # Stream-Framework-Bench
-An open source and easy to replicate benchmark for NoSQL databases using Stream-Framework.
-Stream-Framework is the most widely used open source package for building scalable newsfeeds and activity streams.
+An open source and easy to replicate benchmark for NoSQL databases using [Stream-Framework](https://github.com/tschellenbach/stream-framework).
+Stream-Framework is the most widely used open source package for building scalable newsfeeds and activity streams. This benchmark simulates a real life social network and gives you an idea of how the performance of the various NoSQL databases compares.
 
-# Starting a stack
+# Running the benchmark
+
+Note that running a benchmark can be expensive. 
+
+## Setup your development environment
+
+```
+git clone https://github.com/GetStream/Stream-Framework-Bench.git
+```
 
 Create a new python virtual env
-mkvirtualenv bench
+```mkvirtualenv bench```
 
 Install the dependencies
-pip install -r requirements
+```pip install -r requirements```
 
-Ensure you have your AWS cli setup:
-http://docs.aws.amazon.com/cli/latest/userguide/installing.html
+Ensure you have your AWS cli [installed and configured](http://docs.aws.amazon.com/cli/latest/userguide/installing.html).
 
-Configure your credentials file
-https://boto3.readthedocs.org/en/latest/guide/quickstart.html#configuration
+Configure your [credentials file](https://boto3.readthedocs.org/en/latest/guide/quickstart.html#configuration)
+
+## Start the cluster
 
 Start the cluster on AWS (warning, this is expensive)
-fab create_stack:stack=cassandra
+```fab create_stack:stack=cassandra```
 
-# Running the benchmark using stream framework
+You can view the progress in your Cloudformation dashboard.
 
-fab run_bench:stack=cassandra
+## Running the benchmark using stream framework
+
+```fab run_bench:stack=cassandra```
 
 The benchmark will slowly increase the number of users in the graph
 and measure:
@@ -29,11 +39,11 @@ and measure:
 * The time it takes to read a feed
 * The fanout delay for feed updates
 
-# Stopping the stack
+## Stopping the stack
 
 fab delete_stack:stack=cassandra
 
-# Testing a different database backend
+# Testing another NoSQL database
 
 Fork Stream-Framework
 https://github.com/tschellenbach/stream-framework
@@ -58,12 +68,7 @@ A stack will typically start several components
 * Task workers/ Celery - An autoscaling group of task workers
 * A cluster of your database instances - 3 by default
 
-# The benchmark script
-
-* The benchmark runs for either flat or aggregated feeds. Aggregated feeds are heavier on the cluster.
-
-
-# Development
+# Development tips
 
 * Running a celery worker locally 
 

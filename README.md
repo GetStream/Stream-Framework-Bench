@@ -13,10 +13,16 @@ git clone https://github.com/GetStream/Stream-Framework-Bench.git
 ```
 
 Create a new python virtual env
-```mkvirtualenv bench```
+
+```
+mkvirtualenv bench
+```
 
 Install the dependencies
-```pip install -r requirements```
+
+```
+pip install -r requirements
+```
 
 Ensure you have your AWS cli [installed and configured](http://docs.aws.amazon.com/cli/latest/userguide/installing.html).
 
@@ -25,13 +31,18 @@ Configure your [credentials file](https://boto3.readthedocs.org/en/latest/guide/
 ## Start the cluster
 
 Start the cluster on AWS (warning, this is expensive)
-```fab create_stack:stack=cassandra```
+
+```
+fab create_stack:stack=cassandra
+```
 
 You can view the progress in your Cloudformation dashboard.
 
 ## Running the benchmark using stream framework
 
-```fab run_bench:stack=cassandra```
+```
+fab run_bench:stack=cassandra
+```
 
 The benchmark will slowly increase the number of users in the graph
 and measure:

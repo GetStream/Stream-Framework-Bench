@@ -10,7 +10,7 @@ STREAM_CASSANDRA_HOSTS = [
 # configure the broker url
 BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 
-CELERY_ALWAYS_EAGER = True
+
 CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
 DEBUG = True
 
@@ -29,11 +29,45 @@ INSTALLED_APPS = [
 # urls.py is empty
 ROOT_URLCONF = 'benchmark.urls'
 
-
 import os
 environment = os.environ.get('ENVIRONMENT')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'standard': {
+            'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True
+        },
+        'bench': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+    }
+}
+# TODO: somehow Django isn't picking this up automatically (it should)
+# as a workaround we're calling dictConfig directly
+from logging.config import dictConfig
+dictConfig(LOGGING)
 
 # production settings
 if environment == 'production':
     DEBUG = False
+    CELERY_ALWAYS_EAGER = False
+    
+if environment == 'rabbit':
     CELERY_ALWAYS_EAGER = False

@@ -1,7 +1,6 @@
 # TODO tech
 
 * Security group setup
-* Start with AWS instance or Ubuntu instance
 * Instance configuration via Puppet or alternative (Rabbit & Celery workers)
 
 * Making sure the instances can find RabbitMQ and Cassandra

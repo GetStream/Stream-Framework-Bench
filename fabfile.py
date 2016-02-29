@@ -5,6 +5,8 @@ from collections import defaultdict
 from fabric.state import env
 from fabric.tasks import execute
 from fabric.operations import sudo
+import time
+import botocore
 
 BASE_DIR = os.path.dirname(__file__)
 CLOUDFORMATION_DIR = os.path.join(BASE_DIR, 'cloudformation')
@@ -46,16 +48,40 @@ def create_stack(stack):
     validate()
     client = boto3.client('cloudformation')
     template_body = read_template(stack)
+    _wait_for_stack(stack)
     response = client.create_stack(
         StackName='stream-bench-%s' % stack, TemplateBody=template_body)
     print response
+    _wait_for_stack(stack)
 
 
 def delete_stack(stack):
     validate()
     client = boto3.client('cloudformation')
+    _wait_for_stack(stack)
     response = client.delete_stack(StackName='stream-bench-%s' % stack)
     print response
+    _wait_for_stack(stack)
+    
+
+def _wait_for_stack(stack):
+    '''
+    Wait till the stack is no longer in an in-progress state
+    '''
+    stack_name = 'stream-bench-%s' % stack
+    cloudformation = boto3.resource('cloudformation')
+    client = boto3.client('cloudformation')
+    for x in range(10):
+        try:
+            stack_instance = cloudformation.Stack(stack_name)
+            if 'PROGRESS' not in stack_instance.stack_status:
+                return stack_instance
+            print 'waiting for stack', stack_instance.stack_name, stack_instance.stack_status
+            time.sleep(5)
+        except botocore.exceptions.ClientError as e:
+            return None
+        
+        
 
 
 def get_ec2_instances(stack, logical_id):
@@ -83,6 +109,11 @@ def get_ec2_instances(stack, logical_id):
 def _run_bench():
     sudo('ENVIRONMENT=production python /srv/bench/sfb/run.py --start-users=10000 --max-users=10000000 --multiplier=2 --duration=10')
 
+def _verify_rabbit():
+    sudo('rabbitmqctl status')
+    
+def _verify_celery():
+    sudo('ps aux | grep run.py')
 
 def run_bench(stack):
     '''
@@ -90,5 +121,15 @@ def run_bench(stack):
     Execute python run.py with production settings
     '''
     env.user = 'ubuntu'
+    # check if rabbit and celery started correctly
     instance_dict = get_ec2_instances(stack, logical_id='RabbitAutoScaling')
+    execute(_verify_rabbit, hosts=instance_dict['running'])
+    celery_instance_dict = get_ec2_instances(stack, logical_id='CeleryAutoScaling')
+    execute(_verify_celery, hosts=celery_instance_dict['running'])
+    # start the actual benchmark
     execute(_run_bench, hosts=instance_dict['running'])
+    
+    
+    
+    
+    

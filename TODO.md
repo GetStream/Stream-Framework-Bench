@@ -11,8 +11,6 @@
 ## other steps
 
 * Add tracking metrics for read time and fanout delay
-* Store the tracking metrics (redis/cloudwatch?)
-* Find a way to visualize those metrics
 * Test the assumption that 1 RabbitMQ instance with 1 python script and 20ish celery workers can generate enough load
 
 # TODO tech - phase 2

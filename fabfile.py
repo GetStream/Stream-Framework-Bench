@@ -113,7 +113,7 @@ def _verify_rabbit():
     sudo('rabbitmqctl status')
     
 def _verify_celery():
-    sudo('ps aux | grep run.py')
+    sudo('ps aux | grep celery')
 
 def run_bench(stack):
     '''

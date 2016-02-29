@@ -107,7 +107,44 @@
         "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "RabbitMap", "AMI" ]},
         "InstanceType": { "Fn::FindInMap" : [ "BenchMap", "RabbitMap", "InstanceType" ]},
         "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
-        "SecurityGroups": [{ "Ref" : "RabbitSecurityGroup" }, { "Ref" : "BenchmarkSecurityGroup" }]
+        "SecurityGroups": [{ "Ref" : "RabbitSecurityGroup" }, { "Ref" : "BenchmarkSecurityGroup" }],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#cloud-config",
+                "\n",
+                "packages:",
+                "\n",
+                " - git",
+                "\n",
+                " - gcc",
+                "\n",
+                " - python-dev",
+                "\n",
+                " - libev4",
+                "\n",
+                " - libev-dev",
+                "\n",
+                " - python-pip",
+                "\n",
+                " - rabbitmq-server",
+                "\n\n",
+                "runcmd:",
+                "\n",
+                " - mkdir -p /srv/bench/",
+                "\n",
+                " - /usr/bin/git clone",
+                {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "GitRepo" ]},
+                " /srv/bench/sfb",
+                "\n",
+                " - pip install -r /srv/bench/sfb/requirements.txt",
+                "\n"
+              ]
+            ]
+          }
+        }
       }
     },
     
@@ -160,8 +197,11 @@
                 "\n",
                 " - /usr/bin/git clone",
                 {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "GitRepo" ]},
+                " /srv/bench/sfb",
                 "\n",
-                " - pip install -r /srv/bench/requirements.txt",
+                " - pip install -r /srv/bench/sfb/requirements.txt",
+                "\n",
+                " - ENVIRONMENT=production celery -A benchmark worker -l debug --workdir /srv/bench/sfb",
                 "\n"
               ]
             ]

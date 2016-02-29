@@ -1,9 +1,15 @@
 # TODO tech
 
-* Security group setup
-* Instance configuration via Puppet or alternative (Rabbit & Celery workers)
 
-* Making sure the instances can find RabbitMQ and Cassandra
+## cassandra.template
+
+* Security group setup via cloudformation 
+* Instance discovery (how do celery and rabbit know where to find the cassandra nodes?)
+* Instance configuration via cloud-init (Rabbit & Celery workers, almost done)
+
+
+## other steps
+
 * Add tracking metrics for read time and fanout delay
 * Store the tracking metrics (redis/cloudwatch?)
 * Find a way to visualize those metrics

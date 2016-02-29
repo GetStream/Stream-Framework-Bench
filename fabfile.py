@@ -4,6 +4,7 @@ from fabric.api import run
 from collections import defaultdict
 from fabric.state import env
 from fabric.tasks import execute
+from fabric.operations import sudo
 
 BASE_DIR = os.path.dirname(__file__)
 CLOUDFORMATION_DIR = os.path.join(BASE_DIR, 'cloudformation')
@@ -80,7 +81,7 @@ def get_ec2_instances(stack, logical_id):
     return instance_dict
 
 def _run_bench():
-    run('python run.py --start-users=10000 --max-users=10000000 --multiplier=2 --duration=10')
+    sudo('ENVIRONMENT=production python /srv/bench/sfb/run.py --start-users=10000 --max-users=10000000 --multiplier=2 --duration=10')
 
 
 def run_bench(stack):
@@ -88,5 +89,6 @@ def run_bench(stack):
     Log into the RabbitMQ machine
     Execute python run.py with production settings
     '''
+    env.user = 'ubuntu'
     instance_dict = get_ec2_instances(stack, logical_id='RabbitAutoScaling')
     execute(_run_bench, hosts=instance_dict['running'])

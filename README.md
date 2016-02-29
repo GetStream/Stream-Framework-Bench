@@ -28,6 +28,8 @@ Ensure you have your AWS cli [installed and configured](http://docs.aws.amazon.c
 
 Configure your [credentials file](https://boto3.readthedocs.org/en/latest/guide/quickstart.html#configuration)
 
+Change the key pair name used for starting the instances by editing stack.template
+
 ## Start the cluster
 
 Start the cluster on AWS (warning, this is expensive)
@@ -37,6 +39,7 @@ fab create_stack:stack=cassandra
 ```
 
 You can view the progress in your Cloudformation dashboard.
+Note that cloud-init will take a while to run. (cassandra-driver takes a while to install)
 
 ## Running the benchmark using stream framework
 

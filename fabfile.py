@@ -53,6 +53,7 @@ def create_stack(stack):
         StackName='stream-bench-%s' % stack, TemplateBody=template_body)
     print response
     _wait_for_stack(stack)
+    print 'stack is ready, cloud-init will still take a while to install libs'
 
 
 def delete_stack(stack):
@@ -71,7 +72,7 @@ def _wait_for_stack(stack):
     stack_name = 'stream-bench-%s' % stack
     cloudformation = boto3.resource('cloudformation')
     client = boto3.client('cloudformation')
-    for x in range(10):
+    for x in range(30):
         try:
             stack_instance = cloudformation.Stack(stack_name)
             if 'PROGRESS' not in stack_instance.stack_status:
@@ -81,8 +82,6 @@ def _wait_for_stack(stack):
         except botocore.exceptions.ClientError as e:
             return None
         
-        
-
 
 def get_ec2_instances(stack, logical_id):
     client = boto3.client('ec2')
@@ -106,14 +105,21 @@ def get_ec2_instances(stack, logical_id):
 
     return instance_dict
 
+
 def _run_bench():
     sudo('ENVIRONMENT=production python /srv/bench/sfb/run.py --start-users=10000 --max-users=10000000 --multiplier=2 --duration=10')
+
 
 def _verify_rabbit():
     sudo('rabbitmqctl status')
     
+    
 def _verify_celery():
     sudo('ps aux | grep celery')
+    
+def _verify_cloud_init():
+    sudo('ls -la /var/lib/cloud/instance/boot-finished')
+
 
 def run_bench(stack):
     '''
@@ -124,6 +130,7 @@ def run_bench(stack):
     # check if rabbit and celery started correctly
     instance_dict = get_ec2_instances(stack, logical_id='RabbitAutoScaling')
     execute(_verify_rabbit, hosts=instance_dict['running'])
+    execute(_verify_cloud_init, hosts=instance_dict['running'])
     celery_instance_dict = get_ec2_instances(stack, logical_id='CeleryAutoScaling')
     execute(_verify_celery, hosts=celery_instance_dict['running'])
     # start the actual benchmark

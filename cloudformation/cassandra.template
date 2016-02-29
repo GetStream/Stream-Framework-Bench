@@ -1,6 +1,13 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "Cassandra, RabbitMQ, Celery workers and main instance",
+  "Parameters" : {
+    "DatadogAPIKey" : {
+      "Type" : "String",
+      "Default" : "none",
+      "Description" : "Your DataDog API key (optional)"
+    }
+  },
   "Mappings" : {
     "BenchMap": {
         "SettingsMap": {

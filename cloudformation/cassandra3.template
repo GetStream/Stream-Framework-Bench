@@ -28,8 +28,12 @@
       "Properties" : {
         "GroupDescription" : "Enable HTTP access via port 80 and SSH access",
         "SecurityGroupIngress" : [
-          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"},
-          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"}
+          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "7000", "ToPort" : "7000", "SourceSecurityGroupId" : { "Ref" : "CassandraSecurityGroup" }},
+          {"IpProtocol" : "tcp", "FromPort" : "7199", "ToPort" : "7199", "SourceSecurityGroupId" : { "Ref" : "CassandraSecurityGroup" }},
+          {"IpProtocol" : "tcp", "FromPort" : "9042", "ToPort" : "9042", "SourceSecurityGroupId" : { "Ref" : "CassandraSecurityGroup" }},
+          {"IpProtocol" : "tcp", "FromPort" : "9042", "ToPort" : "9042", "SourceSecurityGroupId" : { "Ref" : "CelerySecurityGroup" }},
+          {"IpProtocol" : "tcp", "FromPort" : "9160", "ToPort" : "9160", "SourceSecurityGroupId" : { "Ref" : "CassandraSecurityGroup" }}
         ]
       }
     },
@@ -67,8 +71,9 @@
       "Properties" : {
         "GroupDescription" : "Enable HTTP access via port 80 and SSH access",
         "SecurityGroupIngress" : [
-          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"},
-          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"}
+          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "5672", "ToPort" : "5672", "SourceSecurityGroupId" : { "Ref" : "CelerySecurityGroup" }},
+          {"IpProtocol" : "tcp", "FromPort" : "15672", "ToPort" : "15672", "CidrIp" : "0.0.0.0/0"}
         ]
       }
     },
@@ -103,7 +108,6 @@
       "Properties" : {
         "GroupDescription" : "Enable HTTP access via port 80 and SSH access",
         "SecurityGroupIngress" : [
-          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"},
           {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"}
         ]
       }

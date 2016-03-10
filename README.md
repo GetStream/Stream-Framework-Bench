@@ -1,6 +1,7 @@
+
 # Stream-Framework-Bench
-An open source and easy to replicate benchmark for NoSQL databases using [Stream-Framework](https://github.com/tschellenbach/stream-framework).
-Stream-Framework is the most widely used open source package for building scalable newsfeeds and activity streams. This benchmark simulates a real life social network and gives you an idea of how the performance of the various NoSQL databases compares.
+
+A real-life benchmark for NoSQL databases. It simulates the use case of powering the newsfeed for a social app. The benchmark is open source and easy to replicate. It uses [Stream-Framework](https://github.com/tschellenbach/stream-framework), the most widely used open source package for building scalable newsfeeds and activity streams. 
 
 # Running the benchmark
 

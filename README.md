@@ -3,6 +3,8 @@
 
 A real-life benchmark for NoSQL databases. It simulates the use case of powering the newsfeed for a social app. The benchmark is open source and easy to replicate. It uses [Stream-Framework](https://github.com/tschellenbach/stream-framework), the most widely used open source package for building scalable newsfeeds and activity streams. 
 
+Setting up the infrastructure and running the benchmark is automated via CloudFormation, Fabric, Boto and Cloud-init.
+
 # Running the benchmark
 
 Note that running a benchmark can be expensive. 

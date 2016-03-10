@@ -1,4 +1,0 @@
-class bench_celery {
-
-
-}

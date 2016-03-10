@@ -1,5 +1,6 @@
 from benchmark.celery import app
 from benchmark.manager import benchmark_manager
+from stream_framework.utils import get_metrics_instance
 from benchmark import feeds
 
 
@@ -14,15 +15,17 @@ def add_user_activity(self, social_model, user_id, activity):
 def read_feed_pages(self, social_model, user_id):
     browse_depth = social_model.get_browse_depth(user_id)
     feed_instance = feeds.TimelineFeed(user_id)
-
+    metrics = get_metrics_instance()
     # browse x pages deep
     for page in range(browse_depth):
-        activities = feed_instance[:25]
-        if activities and len(activities) == 25:
-            last_id = activities[-1]
-            feed_instance.filter(id__lte=last_id)
-        else:
-            break
+        # track the time every read takes
+        with metrics.feed_reads_timer(feed_instance.__class__):
+            activities = feed_instance[:25]
+            if activities and len(activities) == 25:
+                last_id = activities[-1]
+                feed_instance.filter(id__lte=last_id)
+            else:
+                break
 
 
 @app.task(bind=True, ignore_result=True)

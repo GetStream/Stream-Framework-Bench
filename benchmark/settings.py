@@ -11,6 +11,7 @@ STREAM_CASSANDRA_HOSTS = [
 BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 
 
+CELERY_ALWAYS_EAGER = True
 CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
 DEBUG = True
 
@@ -71,3 +72,4 @@ if environment == 'production':
     
 if environment == 'rabbit':
     CELERY_ALWAYS_EAGER = False
+    

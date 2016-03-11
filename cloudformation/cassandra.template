@@ -12,6 +12,8 @@
     "BenchMap": {
         "SettingsMap": {
             "AvailabilityZones": ["us-east-1c"],
+            "VpcId" : "vpc-90bc4cf5",
+            "VpcCidrBlock" : "172.31.0.0/16",
             "KeyName": "StreamFrameworkBench",
             "GitRepo": "https://github.com/getstream/stream-framework-bench"
         },
@@ -35,6 +37,7 @@
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
         "GroupDescription" : "SSH access",
+        "VpcId": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "VpcId" ]},
         "SecurityGroupIngress" : [
           {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"}
         ]
@@ -45,11 +48,12 @@
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
         "GroupDescription" : "Cassandra ports",
+        "VpcId": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "VpcId" ]},
         "SecurityGroupIngress" : [
-          {"IpProtocol" : "tcp", "FromPort" : "7000", "ToPort" : "7000", "SourceSecurityGroupName" : {"Ref" : "BenchmarkSecurityGroup"}},
-          {"IpProtocol" : "tcp", "FromPort" : "7199", "ToPort" : "7199", "SourceSecurityGroupName" : {"Ref" : "BenchmarkSecurityGroup"}},
-          {"IpProtocol" : "tcp", "FromPort" : "9042", "ToPort" : "9042", "SourceSecurityGroupName" : {"Ref" : "BenchmarkSecurityGroup"}},
-          {"IpProtocol" : "tcp", "FromPort" : "9160", "ToPort" : "9160", "SourceSecurityGroupName" : {"Ref" : "BenchmarkSecurityGroup"}}
+          {"IpProtocol" : "tcp", "FromPort" : "7000", "ToPort" : "7000", "CidrIp" : {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "VpcCidrBlock" ]}},
+          {"IpProtocol" : "tcp", "FromPort" : "7199", "ToPort" : "7199", "CidrIp" : {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "VpcCidrBlock" ]}},
+          {"IpProtocol" : "tcp", "FromPort" : "9042", "ToPort" : "9042", "CidrIp" : {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "VpcCidrBlock" ]}},
+          {"IpProtocol" : "tcp", "FromPort" : "9160", "ToPort" : "9160", "CidrIp" : {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "VpcCidrBlock" ]}}
         ]
       }
     },
@@ -59,8 +63,8 @@
       "Properties": {
         "AvailabilityZones" : {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "AvailabilityZones" ]},
         "Cooldown": "300",
-        "MaxSize": "0",
-        "MinSize": "0",
+        "MaxSize": "1",
+        "MinSize": "1",
         "HealthCheckGracePeriod": "300",
         "HealthCheckType": "EC2",
         "LaunchConfigurationName": {
@@ -86,9 +90,10 @@
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
         "GroupDescription" : "RabbitMQ ports",
+        "VpcId": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "VpcId" ]},
         "SecurityGroupIngress" : [
-          {"IpProtocol" : "tcp", "FromPort" : "15672", "ToPort" : "15672", "SourceSecurityGroupName" : {"Ref" : "BenchmarkSecurityGroup"}},
-          {"IpProtocol" : "tcp", "FromPort" : "5672", "ToPort" : "5672", "SourceSecurityGroupName" : {"Ref" : "BenchmarkSecurityGroup"}}
+          {"IpProtocol" : "tcp", "FromPort" : "15672", "ToPort" : "15672", "CidrIp" : {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "VpcCidrBlock" ]}},
+          {"IpProtocol" : "tcp", "FromPort" : "5672", "ToPort" : "5672", "CidrIp" : {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "VpcCidrBlock" ]}}
         ]
       }
     },

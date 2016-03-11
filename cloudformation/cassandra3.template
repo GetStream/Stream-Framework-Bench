@@ -1,6 +1,33 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "Cassandra, RabbitMQ, Celery workers and main instance",
+  "Parameters" : {
+    "GitRevision" : {
+      "Type" : "String",
+      "Default" : "production",
+      "Description" : "The git revision the instances will run on"
+    },
+    "CassandraInstanceType" : {
+      "Type" : "String",
+      "Default" : "t2.medium",
+      "Description" : "Please provide the instance type"
+    },
+    "CassandraClusterSize" : {
+      "Type" : "Number",
+      "Default" : "1",
+      "Description" : "How many instances do you want to use for the Cassandra's cluster?"
+    },
+    "RabbitMQInstanceType" : {
+      "Type" : "String",
+      "Default" : "t2.medium",
+      "Description" : "Please provide the instance type"
+    },
+    "CeleryInstanceType" : {
+      "Type" : "String",
+      "Default" : "t2.medium",
+      "Description" : "Please provide the instance type"
+    }
+  },
   "Mappings" : {
     "BenchMap": {
         "SettingsMap": {
@@ -8,16 +35,13 @@
             "KeyName": "StreamFrameworkBench"
         },
         "CassandraMap": {
-            "AMI" : "ami-711ca91a",
-            "InstanceType": "i2.xlarge"
+            "AMI" : "ami-8fcee4e5"
         },
         "RabbitMap": {
-            "AMI" : "ami-fce3c696",
-            "InstanceType": "t2.micro"
+            "AMI" : "ami-8fcee4e5"
         },
         "CeleryMap": {
-            "AMI" : "ami-fce3c696",
-            "InstanceType": "t2.micro"
+            "AMI" : "ami-8fcee4e5"
         }
     }
   },
@@ -43,8 +67,8 @@
       "Properties": {
         "AvailabilityZones" : {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "AvailabilityZones" ]},
         "Cooldown": "300",
-        "MaxSize": "1",
-        "MinSize": "1",
+        "MaxSize": { "Ref": "CassandraClusterSize" },
+        "MinSize": { "Ref": "CassandraClusterSize" },
         "HealthCheckGracePeriod": "300",
         "HealthCheckType": "EC2",
         "LaunchConfigurationName": {
@@ -57,11 +81,12 @@
       "Type": "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
         "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "CassandraMap", "AMI" ]},
-        "InstanceType": { "Fn::FindInMap" : [ "BenchMap", "CassandraMap", "InstanceType" ]},
+        "InstanceType": { "Ref": "CassandraInstanceType" },
         "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
         "SecurityGroups": [{ "Ref" : "CassandraSecurityGroup" }],
+        "Tags": [ { "Name": { "Fn::Join": [ "stream-bench-celery-", { "Ref": "AWS::StackName" }] } }],
         "UserData": { 
-            "Fn::Base64":  "--clustername benchmark --totalnodes 1 --version community --release 3.3 --repository https://github.com/riptano/ComboAMI#2.6.3 --bootstrap --opscenter no"
+            "Fn::Base64": "--clustername benchmark --totalnodes 1 --version community --release 3.3 --repository https://github.com/riptano/ComboAMI#2.6.3 --bootstrap --opscenter no"
         }
       }
     },
@@ -97,9 +122,19 @@
       "Type": "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
         "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "RabbitMap", "AMI" ]},
-        "InstanceType": { "Fn::FindInMap" : [ "BenchMap", "RabbitMap", "InstanceType" ]},
+        "InstanceType": { "Ref": "RabbitMQInstanceType" },
         "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
-        "SecurityGroups": [{ "Ref" : "RabbitSecurityGroup" }]
+        "SecurityGroups": [{ "Ref" : "RabbitSecurityGroup" }],
+        "Tags": [ { "Name": { "Fn::Join": [ "stream-bench-rabbit-", { "Ref": "AWS::StackName" }] } }],
+        "UserData": { "Fn::Base64": { "Fn::Join": [ "", [
+          "#!/bin/bash", "\n",
+          "mkdir ~/git", "\n",
+          "git clone https://github.com/GetStream/Stream-Framework-Bench.git ~/git/bench", "\n",
+          "cd ~/git/bench/puppet/modules", "\n",
+          "git clone https://github.com/puppetlabs/puppetlabs-rabbitmq.git", "\n",
+          "git clone https://github.com/plathrop/puppet-module-supervisor.git", "\n",
+          "git clone https://github.com/stankevich/puppet-python.git", "\n"
+        ] ] } }
       }
     },
     
@@ -132,9 +167,19 @@
       "Type": "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
         "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "CeleryMap", "AMI" ]},
-        "InstanceType": { "Fn::FindInMap" : [ "BenchMap", "CeleryMap", "InstanceType" ]},
+        "InstanceType": { "Ref": "CassandraInstanceType" },
         "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
-        "SecurityGroups": [{ "Ref" : "CelerySecurityGroup" }]
+        "SecurityGroups": [{ "Ref" : "CelerySecurityGroup" }],
+        "Tags": [ { "Name": { "Fn::Join": [ "stream-bench-celery-", { "Ref": "AWS::StackName" }] } }],
+        "UserData": { "Fn::Base64": { "Fn::Join": [ "", [
+          "#!/bin/bash", "\n",
+          "mkdir ~/git", "\n",
+          "git clone https://github.com/GetStream/Stream-Framework-Bench.git ~/git/bench", "\n",
+          "cd ~/git/bench/puppet/modules", "\n",
+          "git clone https://github.com/puppetlabs/puppetlabs-rabbitmq.git", "\n",
+          "git clone https://github.com/plathrop/puppet-module-supervisor.git", "\n",
+          "git clone https://github.com/stankevich/puppet-python.git", "\n"
+        ] ] } }
       }
     }
     

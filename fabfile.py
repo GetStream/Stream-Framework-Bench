@@ -44,13 +44,17 @@ def validate_cloudformation_files():
         client.validate_template(TemplateBody=template_body)
 
 
-def create_stack(stack):
+def create_stack(stack, datadog='none'):
     validate()
     client = boto3.client('cloudformation')
     template_body = read_template(stack)
     _wait_for_stack(stack)
     response = client.create_stack(
-        StackName='stream-bench-%s' % stack, TemplateBody=template_body)
+        StackName='stream-bench-%s' % stack, TemplateBody=template_body, Parameters=[{
+            'ParameterKey': 'DatadogAPIKey',
+            'ParameterValue': datadog,
+            'UsePreviousValue': True
+        }])
     print response
     _wait_for_stack(stack)
     print 'stack is ready, cloud-init will still take a while to install libs'

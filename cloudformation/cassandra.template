@@ -152,6 +152,10 @@
                 " /srv/bench/sfb",
                 "\n",
                 " - pip install -r /srv/bench/sfb/requirements.txt",
+                "\n",
+                " - DD_API_KEY=",
+                { "Ref" : "DatadogAPIKey" },
+                " bash -c \"$(curl -L https://raw.githubusercontent.com/DataDog/dd-agent/master/packaging/datadog-agent/source/install_agent.sh)\"",
                 "\n"
               ]
             ]
@@ -213,7 +217,11 @@
                 "\n",
                 " - pip install -r /srv/bench/sfb/requirements.txt",
                 "\n",
-                " - ENVIRONMENT=production celery -A benchmark worker -l debug --workdir /srv/bench/sfb",
+                " - DD_API_KEY=",
+                { "Ref" : "DatadogAPIKey" },
+                " bash -c \"$(curl -L https://raw.githubusercontent.com/DataDog/dd-agent/master/packaging/datadog-agent/source/install_agent.sh)\"",
+                "\n",
+                " - C_FORCE_ROOT=1 ENVIRONMENT=production celery -A benchmark worker -l debug --workdir /srv/bench/sfb",
                 "\n"
               ]
             ]

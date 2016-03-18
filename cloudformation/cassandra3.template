@@ -76,7 +76,7 @@
         }
       }
     },
-    
+
     "Cassandra": {
       "Type": "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
@@ -85,8 +85,13 @@
         "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
         "SecurityGroups": [{ "Ref" : "CassandraSecurityGroup" }],
         "Tags": [ { "Name": { "Fn::Join": [ "stream-bench-celery-", { "Ref": "AWS::StackName" }] } }],
-        "UserData": { 
-            "Fn::Base64": "--clustername benchmark --totalnodes 1 --version community --release 3.3 --repository https://github.com/riptano/ComboAMI#2.6.3 --bootstrap --opscenter no"
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "--clustername benchmark --totalnodes ",
+              { "Ref": "CassandraClusterSize" },
+              " --version community --release 3.3 --repository https://github.com/riptano/ComboAMI#2.6.3 --bootstrap --opscenter no"]
+          }
         }
       }
     },
@@ -126,15 +131,47 @@
         "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
         "SecurityGroups": [{ "Ref" : "RabbitSecurityGroup" }],
         "Tags": [ { "Name": { "Fn::Join": [ "stream-bench-rabbit-", { "Ref": "AWS::StackName" }] } }],
-        "UserData": { "Fn::Base64": { "Fn::Join": [ "", [
-          "#!/bin/bash", "\n",
-          "mkdir ~/git", "\n",
-          "git clone https://github.com/GetStream/Stream-Framework-Bench.git ~/git/bench", "\n",
-          "cd ~/git/bench/puppet/modules", "\n",
-          "git clone https://github.com/puppetlabs/puppetlabs-rabbitmq.git", "\n",
-          "git clone https://github.com/plathrop/puppet-module-supervisor.git", "\n",
-          "git clone https://github.com/stankevich/puppet-python.git", "\n"
-        ] ] } }
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#cloud-config",
+                "\n",
+                "packages:",
+                "\n",
+                " - git",
+                "\n",
+                " - gcc",
+                "\n",
+                " - python-dev",
+                "\n",
+                " - libev4",
+                "\n",
+                " - libev-dev",
+                "\n",
+                " - python-pip",
+                "\n",
+                " - rabbitmq-server",
+                "\n\n",
+                "runcmd:",
+                "\n",
+                " - mkdir -p /srv/bench/",
+                "\n",
+                " - /usr/bin/git clone ",
+                {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "GitRepo" ]},
+                " /srv/bench/sfb",
+                "\n",
+                " - pip install -r /srv/bench/sfb/requirements.txt",
+                "\n",
+                " - DD_API_KEY=",
+                { "Ref" : "DatadogAPIKey" },
+                " bash -c \"$(curl -L https://raw.githubusercontent.com/DataDog/dd-agent/master/packaging/datadog-agent/source/install_agent.sh)\"",
+                "\n"
+              ]
+            ]
+          }
+        }
       }
     },
     
@@ -171,18 +208,48 @@
         "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
         "SecurityGroups": [{ "Ref" : "CelerySecurityGroup" }],
         "Tags": [ { "Name": { "Fn::Join": [ "stream-bench-celery-", { "Ref": "AWS::StackName" }] } }],
-        "UserData": { "Fn::Base64": { "Fn::Join": [ "", [
-          "#!/bin/bash", "\n",
-          "mkdir ~/git", "\n",
-          "git clone https://github.com/GetStream/Stream-Framework-Bench.git ~/git/bench", "\n",
-          "cd ~/git/bench/puppet/modules", "\n",
-          "git clone https://github.com/puppetlabs/puppetlabs-rabbitmq.git", "\n",
-          "git clone https://github.com/plathrop/puppet-module-supervisor.git", "\n",
-          "git clone https://github.com/stankevich/puppet-python.git", "\n"
-        ] ] } }
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#cloud-config",
+                "\n",
+                "packages:",
+                "\n",
+                " - git",
+                "\n",
+                " - gcc",
+                "\n",
+                " - python-dev",
+                "\n",
+                " - libev4",
+                "\n",
+                " - libev-dev",
+                "\n",
+                " - python-pip",
+                "\n\n",
+                "runcmd:",
+                "\n",
+                " - mkdir -p /srv/bench/",
+                "\n",
+                " - /usr/bin/git clone ",
+                {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "GitRepo" ]},
+                " /srv/bench/sfb",
+                "\n",
+                " - pip install -r /srv/bench/sfb/requirements.txt",
+                "\n",
+                " - DD_API_KEY=",
+                { "Ref" : "DatadogAPIKey" },
+                " bash -c \"$(curl -L https://raw.githubusercontent.com/DataDog/dd-agent/master/packaging/datadog-agent/source/install_agent.sh)\"",
+                "\n",
+                " - C_FORCE_ROOT=1 ENVIRONMENT=production celery -A benchmark worker -l debug --workdir /srv/bench/sfb",
+                "\n"
+              ]
+            ]
+          }
+        }
       }
     }
-    
   }
-  
 }

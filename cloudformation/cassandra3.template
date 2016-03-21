@@ -65,37 +65,49 @@
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Version" : "2012-10-17",
-          "Statement": [ {
-            "Effect": "Allow",
-            "Principal": {
-              "Service": [ "ec2.amazonaws.com" ]
-            },
-            "Action": [ "sts:AssumeRole" ]
-          } ]
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [ "ec2.amazonaws.com" ]
+              },
+              "Action": [ "sts:AssumeRole" ]
+            }
+          ]
         },
-        "Path": "BenchRole",
+        "Path": "/BenchRole/",
         "Policies": [
           {
-            "Version": "2012-10-17",
-            "Statement": [
-              {
-                "Sid": "Stmt1458578116000",
-                "Effect": "Allow",
-                "Action": [
-                  "ec2:DescribeInstanceAttribute",
-                  "ec2:DescribeInstanceStatus",
-                  "ec2:DescribeInstances",
-                  "ec2:DescribeNetworkInterfaceAttribute",
-                  "ec2:DescribeNetworkInterfaces",
-                  "ec2:DescribeTags"
-                ],
-                "Resource": [
-                  "*"
-                ]
-              }
-            ]
+            "PolicyDocument" : {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "Stmt1458578116000",
+                  "Effect": "Allow",
+                  "Action": [
+                    "ec2:DescribeInstanceAttribute",
+                    "ec2:DescribeInstanceStatus",
+                    "ec2:DescribeInstances",
+                    "ec2:DescribeNetworkInterfaceAttribute",
+                    "ec2:DescribeNetworkInterfaces",
+                    "ec2:DescribeTags"
+                  ],
+                  "Resource": [
+                    "*"
+                  ]
+                }
+              ]
+            },
+            "PolicyName" : "DescribeTagsBenchRole"
           }
         ]
+      }
+    },
+    "BenchProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/BenchProfile/",
+        "Roles": [{ "Ref": "BenchRole" }]
       }
     },
 

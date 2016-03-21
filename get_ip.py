@@ -34,7 +34,9 @@ def print_ips(tag_name):
     conn = connect()
     reservations = conn.get_all_instances(filters={"tag:Name": tag_name})
 
-    print("%s" % (reservations[0]["Instances"][0]["PrivateIpAddress"]))
+    for r in reservations:
+        for i in r.instances:
+            print("%s" % (i.private_ip_address))
 
 
 #

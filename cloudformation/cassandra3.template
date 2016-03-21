@@ -31,6 +31,11 @@
       "Type" : "String",
       "Default" : "none",
       "Description" : "Your DataDog API key (optional)"
+    },
+    "BenchUserPassword" : {
+      "Type" : "String",
+      "Default" : "bench2016",
+      "Description" : "Please specify the password for the (super)user 'bench'"
     }
   },
   "Mappings" : {
@@ -54,6 +59,45 @@
     }
   },
   "Resources": {
+
+    "BenchRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [ {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [ "ec2.amazonaws.com" ]
+            },
+            "Action": [ "sts:AssumeRole" ]
+          } ]
+        },
+        "Path": "BenchRole",
+        "Policies": [
+          {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Sid": "Stmt1458578116000",
+                "Effect": "Allow",
+                "Action": [
+                  "ec2:DescribeInstanceAttribute",
+                  "ec2:DescribeInstanceStatus",
+                  "ec2:DescribeInstances",
+                  "ec2:DescribeNetworkInterfaceAttribute",
+                  "ec2:DescribeNetworkInterfaces",
+                  "ec2:DescribeTags"
+                ],
+                "Resource": [
+                  "*"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
 
     "CassandraSecurityGroupIngress1" : {
       "Type" : "AWS::EC2::SecurityGroupIngress",
@@ -228,6 +272,8 @@
                 "\n",
                 " - pip install -r /srv/bench/sfb/requirements.txt",
                 "\n",
+                " - sudo groupadd bench && sudo useradd -p `perl -e \"print crypt('", { "Ref": "BenchUserPassword" },"','sa');\"` -g bench -G sudo bench",
+                "\n",
                 " - DD_API_KEY=",
                 { "Ref" : "DatadogAPIKey" },
                 " bash -c \"$(curl -L https://raw.githubusercontent.com/DataDog/dd-agent/master/packaging/datadog-agent/source/install_agent.sh)\"",
@@ -308,6 +354,14 @@
                 " /srv/bench/sfb",
                 "\n",
                 " - pip install -r /srv/bench/sfb/requirements.txt",
+                "\n",
+                " - sudo groupadd bench && sudo useradd -p `perl -e \"print crypt('", { "Ref": "BenchUserPassword" },"','sa');\"` -g bench -G sudo bench",
+                "\n",
+                " - wget -O /tmp/get_ip.py https://bootstrap.pypa.io/get-pip.py",
+                "\n",
+                " - python /tmp/get_ip.py --region ", {"Ref": "AWS::Region"}, " --tagName stream-bench-rabbit-", { "Ref": "AWS::StackName" }, " > /tmp/rabbit.ipv4",
+                "\n",
+                " - python /tmp/get_ip.py --region ", {"Ref": "AWS::Region"}, " --tagName stream-bench-cassandra-", { "Ref": "AWS::StackName" }, " > /tmp/cassandra.ipv4",
                 "\n",
                 " - DD_API_KEY=",
                 { "Ref" : "DatadogAPIKey" },

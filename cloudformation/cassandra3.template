@@ -371,7 +371,7 @@
                 "\n",
                 " - sudo groupadd bench && sudo useradd -m -s /bin/bash -p `perl -e \"print crypt('", { "Ref": "BenchUserPassword" },"','sa');\"` -g bench -G sudo bench",
                 "\n",
-                " - printf \'\nMatch User %s\n\tPasswordAuthentication yes\n\' bench | sudo tee -a /etc/ssh/sshd_config && sudo service ssh restart",
+                " - printf '\nMatch User %s\n\tPasswordAuthentication yes\n' bench | sudo tee -a /etc/ssh/sshd_config && sudo service ssh restart",
                 "\n",
                 " - wget -O /tmp/get_ip.py https://raw.githubusercontent.com/GetStream/Stream-Framework-Bench/cloudformation2/get_ip.py",
                 "\n",

@@ -9,7 +9,7 @@
     },
     "CassandraInstanceType" : {
       "Type" : "String",
-      "Default" : "t2.micro",
+      "Default" : "i2.xlarge",
       "Description" : "Please provide the instance type"
     },
     "CassandraClusterSize" : {
@@ -48,13 +48,13 @@
         "GitRepo": "https://github.com/getstream/stream-framework-bench"
       },
       "CassandraMap": {
-        "AMI" : "ami-8fcee4e5"
+        "AMI" : "ami-711ca91a"
       },
       "RabbitMap": {
-        "AMI" : "ami-8fcee4e5"
+        "AMI" : "ami-fce3c696"
       },
       "CeleryMap": {
-        "AMI" : "ami-8fcee4e5"
+        "AMI" : "ami-fce3c696"
       }
     }
   },
@@ -333,7 +333,7 @@
       "Type": "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
         "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "CeleryMap", "AMI" ]},
-        "InstanceType": { "Ref": "CassandraInstanceType" },
+        "InstanceType": { "Ref": "CeleryInstanceType" },
         "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
         "SecurityGroups": [{ "Ref" : "CelerySecurityGroup" }],
         "UserData": {
@@ -363,15 +363,13 @@
                 "\n",
                 " - mkdir -p /srv/bench/",
                 "\n",
-                " - /usr/bin/git clone ",
-                {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "GitRepo" ]},
-                " /srv/bench/sfb",
-                "\n",
-                " - pip install -r /srv/bench/sfb/requirements.txt",
+                " - /usr/bin/git clone ", {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "GitRepo" ]}, " /srv/bench/sfb",
                 "\n",
                 " - sudo groupadd bench && sudo useradd -m -s /bin/bash -p `perl -e \"print crypt('", { "Ref": "BenchUserPassword" },"','sa');\"` -g bench -G sudo bench",
                 "\n",
-                " - printf '\nMatch User %s\n\tPasswordAuthentication yes\n' bench | sudo tee -a /etc/ssh/sshd_config && sudo service ssh restart",
+                " - printf '\\nMatch User %s\\n\\tPasswordAuthentication yes\\n' bench | sudo tee -a /etc/ssh/sshd_config && sudo service ssh restart",
+                "\n",
+                " - pip install -r /srv/bench/sfb/requirements.txt",
                 "\n",
                 " - wget -O /tmp/get_ip.py https://raw.githubusercontent.com/GetStream/Stream-Framework-Bench/cloudformation2/get_ip.py",
                 "\n",

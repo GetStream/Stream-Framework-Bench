@@ -3,15 +3,12 @@
 
 ## cassandra.template
 
-* Security group setup via cloudformation 
 * Instance discovery (how do celery and rabbit know where to find the cassandra nodes?)
-* Instance configuration via cloud-init (Rabbit & Celery workers, almost done)
-
 
 ## other steps
 
-* Add tracking metrics for read time and fanout delay
 * Test the assumption that 1 RabbitMQ instance with 1 python script and 20ish celery workers can generate enough load
+* Test case for the social model
 
 # TODO tech - phase 2
 

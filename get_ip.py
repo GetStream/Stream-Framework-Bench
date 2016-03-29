@@ -14,18 +14,17 @@ import sys
 def connect():
     metadata = boto.utils.get_instance_metadata()
     region = metadata['placement']['availability-zone'][:-1]
-    profile = metadata['iam']['info']['InstanceProfileArn']
-    profile = profile[profile.find('/') + 1:]
 
-    conn = boto.ec2.connection.EC2Connection(
-            region=boto.ec2.get_region(region),
-            aws_access_key_id=metadata['iam']['security-credentials'][profile]['AccessKeyId'],
-            aws_secret_access_key=metadata['iam']['security-credentials'][profile]['SecretAccessKey'],
-            security_token=metadata['iam']['security-credentials'][profile]['Token']
-    )
+    for role in metadata['iam']['security-credentials'].keys():
+        conn = boto.ec2.connection.EC2Connection(
+                region=boto.ec2.get_region(region),
+                aws_access_key_id=metadata['iam']['security-credentials'][role]['AccessKeyId'],
+                aws_secret_access_key=metadata['iam']['security-credentials'][role]['SecretAccessKey'],
+                security_token=metadata['iam']['security-credentials'][role]['Token']
+        )
+        break
 
     return conn
-
 
 #
 # Print out private IPv4

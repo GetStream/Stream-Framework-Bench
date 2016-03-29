@@ -41,7 +41,7 @@ def print_ips(tag_name):
 #
 # Main
 #
-opts, args = getopt.getopt(sys.argv[1:], "Lt:r:", ["tag-name", "region"])
+opts, args = getopt.getopt(sys.argv[1:], "Lt:", ["tag-name="])
 
 tag_name = ""
 region = ""

@@ -54,7 +54,10 @@ def create_stack(stack, datadog='none'):
             'ParameterKey': 'DatadogAPIKey',
             'ParameterValue': datadog,
             'UsePreviousValue': True
-        }])
+        }],
+        Capabilities=[
+            'CAPABILITY_IAM',
+        ])
     print response
     _wait_for_stack(stack)
     print 'stack is ready, cloud-init will still take a while to install libs'

@@ -8,7 +8,7 @@ STREAM_CASSANDRA_HOSTS = [
     '127.0.0.1'
 ]
 # configure the broker url
-BROKER_URL = 'amqp://guest:guest@localhost:5672//'
+BROKER_URL = 'amqp://guest:guest@127.0.0.1:5672//'
 
 
 CELERY_ALWAYS_EAGER = True
@@ -65,10 +65,28 @@ LOGGING = {
 from logging.config import dictConfig
 dictConfig(LOGGING)
 
+BASE_DIR = os.path.abspath(os.path.join(__file__, '../../'))
+cassandra_ip_file = os.path.join(BASE_DIR, 'cassandra.ipv4')
+rabbit_ip_file = os.path.join(BASE_DIR, 'rabbit.ipv4')
+
+def read_ip_file(filepath):
+    ips = []
+    if os.path.isfile(filepath):
+        settings_file = open(filepath, 'r')
+        for ip in settings_file.readlines():
+            if ip:
+                ips.append(ip)
+    return ips
+
+STREAM_CASSANDRA_HOSTS = read_ip_file(cassandra_ip_file)
+rabbit_ips = read_ip_file(rabbit_ip_file)
+BROKER_URL = 'amqp://guest:guest@%s:5672//' % rabbit_ips
+
 # production settings
 if environment == 'production':
     DEBUG = False
     CELERY_ALWAYS_EAGER = False
+    
     
 if environment == 'rabbit':
     CELERY_ALWAYS_EAGER = False

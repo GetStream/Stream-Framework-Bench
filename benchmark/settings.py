@@ -75,7 +75,7 @@ def read_ip_file(filepath):
         settings_file = open(filepath, 'r')
         for ip in settings_file.readlines():
             if ip:
-                ips.append(ip)
+                ips.append(ip.strip())
     return ips
 
 STREAM_CASSANDRA_HOSTS = read_ip_file(cassandra_ip_file)

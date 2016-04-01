@@ -202,7 +202,7 @@
               [
                 "--clustername benchmark --totalnodes ",
                 { "Ref": "CassandraClusterSize" },
-                " --version community --release 3.3 --repository https://github.com/riptano/ComboAMI#2.6.3 --bootstrap --opscenter no"
+                " --version community --release 3.4 --bootstrap --opscenter no"
               ]
             ]
           }

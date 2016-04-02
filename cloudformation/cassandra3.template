@@ -202,7 +202,16 @@
               [
                 "--clustername benchmark --totalnodes ",
                 { "Ref": "CassandraClusterSize" },
-                " --version community --release 3.3 --repository https://github.com/riptano/ComboAMI#2.6.3 --bootstrap --opscenter no"
+                " --version community --release 3.3 --opscenter no",
+                " --base64postscript ",
+                { "Fn::Base64": {
+                  "Fn::Join": [ "",
+                    [
+                      "sudo groupadd bench && sudo useradd -m -s /bin/bash -p `perl -e \"print crypt('", { "Ref": "BenchUserPassword" },"','sa');\"` -g bench -G sudo bench;",
+                      "printf '\\nMatch User %s\\n\\tPasswordAuthentication yes\\n' bench | sudo tee -a /etc/ssh/sshd_config && sudo service ssh restart"
+                    ]
+                  ]
+                }}
               ]
             ]
           }
@@ -284,7 +293,9 @@
                 "\n",
                 " - pip install -r /srv/bench/sfb/requirements.txt",
                 "\n",
-                " - sudo groupadd bench && sudo useradd -p `perl -e \"print crypt('", { "Ref": "BenchUserPassword" },"','sa');\"` -g bench -G sudo bench",
+                " - sudo groupadd bench && sudo useradd -m -s /bin/bash -p `perl -e \"print crypt('", { "Ref": "BenchUserPassword" },"','sa');\"` -g bench -G sudo bench",
+                "\n",
+                " - printf '\\nMatch User %s\\n\\tPasswordAuthentication yes\\n' bench | sudo tee -a /etc/ssh/sshd_config && sudo service ssh restart",
                 "\n",
                 " - DD_API_KEY=",
                 { "Ref" : "DatadogAPIKey" },

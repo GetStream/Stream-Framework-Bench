@@ -80,7 +80,7 @@ def read_ip_file(filepath):
 
 STREAM_CASSANDRA_HOSTS = read_ip_file(cassandra_ip_file)
 rabbit_ips = read_ip_file(rabbit_ip_file)
-BROKER_URL = 'amqp://guest:guest@%s:5672//' % rabbit_ips
+BROKER_URL = 'amqp://guest:guest@%s:5672//' % tuple(rabbit_ips)
 
 # production settings
 if environment == 'production':

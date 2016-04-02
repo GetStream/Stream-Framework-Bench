@@ -35,7 +35,8 @@ def print_ips(tag_name):
 
     for r in reservations:
         for i in r.instances:
-            print("%s" % (i.private_ip_address))
+            if i.private_ip_address:
+                print("%s" % (i.private_ip_address))
 
 
 #

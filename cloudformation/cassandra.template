@@ -161,7 +161,8 @@
         "GroupDescription" : "Enable HTTP access via port 80 and SSH access",
         "SecurityGroupIngress" : [
           {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"},
-          {"IpProtocol" : "tcp", "FromPort" : "9042", "ToPort" : "9042", "SourceSecurityGroupName" : { "Ref" : "CelerySecurityGroup" }}
+          {"IpProtocol" : "tcp", "FromPort" : "9042", "ToPort" : "9042", "SourceSecurityGroupName" : { "Ref" : "CelerySecurityGroup" }},
+          {"IpProtocol" : "tcp", "FromPort" : "9042", "ToPort" : "9042", "SourceSecurityGroupName" : { "Ref" : "RabbitSecurityGroup" }}
         ]
       }
     },

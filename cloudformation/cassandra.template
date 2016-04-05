@@ -14,18 +14,23 @@
     },
     "CassandraClusterSize" : {
       "Type" : "Number",
-      "Default" : "1",
+      "Default" : "3",
       "Description" : "How many instances do you want to use for the Cassandra's cluster?"
     },
     "RabbitMQInstanceType" : {
       "Type" : "String",
-      "Default" : "t2.micro",
+      "Default" : "c4.large",
       "Description" : "Please provide the instance type"
     },
     "CeleryInstanceType" : {
       "Type" : "String",
       "Default" : "t2.micro",
       "Description" : "Please provide the instance type"
+    },
+    "CeleryClusterSize" : {
+      "Type" : "Number",
+      "Default" : "15",
+      "Description" : "How many instances do you want to use for the Celery worker cluster?"
     },
     "DatadogAPIKey" : {
       "Type" : "String",
@@ -318,8 +323,8 @@
       "Properties": {
         "AvailabilityZones" : {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "AvailabilityZones" ]},
         "Cooldown": "300",
-        "MaxSize": "1",
-        "MinSize": "1",
+        "MaxSize": { "Ref": "CeleryClusterSize" },
+        "MinSize": { "Ref": "CeleryClusterSize" },
         "HealthCheckGracePeriod": "300",
         "HealthCheckType": "EC2",
         "Tags": [

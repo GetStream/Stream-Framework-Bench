@@ -8,6 +8,7 @@ from fabric.operations import sudo
 import time
 import botocore
 
+BENCHMARK_REGION = 'us-west-2'
 BASE_DIR = os.path.dirname(__file__)
 CLOUDFORMATION_DIR = os.path.join(BASE_DIR, 'cloudformation')
     
@@ -46,7 +47,7 @@ def validate_cloudformation_files():
 
 def create_stack(stack, datadog='none'):
     validate()
-    client = boto3.client('cloudformation')
+    client = boto3.client('cloudformation', region_name=BENCHMARK_REGION)
     template_body = read_template(stack)
     _wait_for_stack(stack)
     response = client.create_stack(
@@ -65,7 +66,7 @@ def create_stack(stack, datadog='none'):
 
 def delete_stack(stack):
     validate()
-    client = boto3.client('cloudformation')
+    client = boto3.client('cloudformation', region_name=BENCHMARK_REGION)
     _wait_for_stack(stack)
     response = client.delete_stack(StackName='stream-bench-%s' % stack)
     print response
@@ -77,8 +78,7 @@ def _wait_for_stack(stack):
     Wait till the stack is no longer in an in-progress state
     '''
     stack_name = 'stream-bench-%s' % stack
-    cloudformation = boto3.resource('cloudformation')
-    client = boto3.client('cloudformation')
+    cloudformation = boto3.resource('cloudformation', region_name=BENCHMARK_REGION)
     for x in range(30):
         try:
             stack_instance = cloudformation.Stack(stack_name)

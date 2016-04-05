@@ -49,17 +49,17 @@
         "AvailabilityZones": ["us-east-1c"],
         "VpcId" : "vpc-90bc4cf5",
         "VpcCidrBlock" : "172.31.0.0/16",
-        "KeyName": "StreamFrameworkBench",
+        "KeyName": "StreamFrameworkBench2",
         "GitRepo": "https://github.com/getstream/stream-framework-bench"
       },
       "CassandraMap": {
-        "AMI" : "ami-711ca91a"
+        "AMI" : "ami-1cff962c"
       },
       "RabbitMap": {
-        "AMI" : "ami-fce3c696"
+        "AMI" : "ami-9abea4fb"
       },
       "CeleryMap": {
-        "AMI" : "ami-fce3c696"
+        "AMI" : "ami-9abea4fb"
       }
     }
   },

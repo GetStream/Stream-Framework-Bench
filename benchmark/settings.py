@@ -8,11 +8,14 @@ STREAM_CASSANDRA_HOSTS = [
     '127.0.0.1'
 ]
 # configure the broker url
-BROKER_URL = 'amqp://guest:guest@127.0.0.1:5672//'
+BROKER_URL = 'librabbitmq://guest:guest@127.0.0.1:5672//'
 
 
 CELERY_ALWAYS_EAGER = True
 CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
+CELERY_IGNORE_RESULT = True
+CELERY_DISABLE_RATE_LIMITS = True
+CELERY_TASK_PUBLISH_RETRY = False
 DEBUG = True
 
 STREAM_METRIC_CLASS = 'benchmark.metrics.BenchMetrics'

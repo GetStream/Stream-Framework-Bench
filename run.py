@@ -1,5 +1,6 @@
 import os
 import sys
+from stream_framework.utils.timing import timer
 sys.path.insert(0, os.path.dirname(__file__))
 os.environ["DJANGO_SETTINGS_MODULE"] = "benchmark.settings"
 
@@ -15,7 +16,6 @@ import click
 
 
 logger = logging.getLogger('bench')
-
 
 
 
@@ -39,6 +39,7 @@ def run_benchmark(start_users, max_users, multiplier, duration):
         for x in range(duration):
             days += 1
             daily_tasks = []
+            t = timer()
             metrics_instance.on_day_change(days)
             logger.debug('Day %s for our network', days)
             # create load based on the current model
@@ -58,15 +59,19 @@ def run_benchmark(start_users, max_users, multiplier, duration):
                 # read a few pages of data
                 daily_tasks.append(tasks.read_feed_pages.s(social_model, user_id))
                 
+            print t.next()
             # send the daily tasks to celery
             job = group(*daily_tasks)
             result = job.apply_async()
+            print t.next()
             # wait
-            result.join()
+            #while True:
+            #    if result.ready():
+            #        break
+            #    time.sleep(1)
+            #    logger.debug('Waiting for day %s to finish' % days)
+            
             logger.debug('Day %s finished', days)
-            if not result.ready():
-                raise ValueError('day isnt finished yet')
-                
             time.sleep(1)
 
         # grow the network

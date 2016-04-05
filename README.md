@@ -58,7 +58,9 @@ and measure:
 
 ## Stopping the stack
 
+```
 fab delete_stack:stack=cassandra
+```
 
 # Testing another NoSQL database
 

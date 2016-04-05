@@ -14,7 +14,7 @@
     },
     "CassandraClusterSize" : {
       "Type" : "Number",
-      "Default" : "3",
+      "Default" : "1",
       "Description" : "How many instances do you want to use for the Cassandra's cluster?"
     },
     "RabbitMQInstanceType" : {
@@ -29,7 +29,7 @@
     },
     "CeleryClusterSize" : {
       "Type" : "Number",
-      "Default" : "15",
+      "Default" : "3",
       "Description" : "How many instances do you want to use for the Celery worker cluster?"
     },
     "DatadogAPIKey" : {
@@ -46,7 +46,7 @@
   "Mappings" : {
     "BenchMap": {
       "SettingsMap": {
-        "AvailabilityZones": ["us-east-1c"],
+        "AvailabilityZones": ["us-west-2a"],
         "VpcId" : "vpc-90bc4cf5",
         "VpcCidrBlock" : "172.31.0.0/16",
         "KeyName": "StreamFrameworkBench2",
@@ -172,7 +172,7 @@
       }
     },
 
-    "CassandraAutoscaling": {
+    "CassandraAutoScaling": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "Properties": {
         "AvailabilityZones" : {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "AvailabilityZones" ]},

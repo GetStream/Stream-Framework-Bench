@@ -91,7 +91,7 @@ def _wait_for_stack(stack):
         
 
 def get_ec2_instances(stack, logical_id):
-    client = boto3.client('ec2')
+    client = boto3.client('ec2', region_name=BENCHMARK_REGION)
     tags = {
         'tag:aws:cloudformation:stack-name': 'stream-bench-%s' % stack,
         'tag:aws:cloudformation:logical-id': logical_id
@@ -114,7 +114,7 @@ def get_ec2_instances(stack, logical_id):
 
 
 def _run_bench():
-    sudo('ENVIRONMENT=production python /srv/bench/sfb/run.py --start-users=10000 --max-users=10000000 --multiplier=2 --duration=10')
+    sudo('CQLENG_ALLOW_SCHEMA_MANAGEMENT=1 ENVIRONMENT=production python /srv/bench/sfb/run.py --start-users=10000 --max-users=10000000 --multiplier=2 --duration=10')
 
 
 def _verify_rabbit():
@@ -126,6 +126,9 @@ def _verify_celery():
     
 def _verify_cloud_init():
     sudo('ls -la /var/lib/cloud/instance/boot-finished')
+    
+def _verify_cassandra():
+    sudo('ps aux | grep cassandra')
 
 
 def run_bench(stack):
@@ -140,6 +143,8 @@ def run_bench(stack):
     execute(_verify_cloud_init, hosts=instance_dict['running'])
     celery_instance_dict = get_ec2_instances(stack, logical_id='CeleryAutoScaling')
     execute(_verify_celery, hosts=celery_instance_dict['running'])
+    cassandra_instance_dict = get_ec2_instances(stack, logical_id='CassandraAutoScaling')
+    execute(_verify_cassandra, hosts=cassandra_instance_dict['running'])
     # start the actual benchmark
     execute(_run_bench, hosts=instance_dict['running'])
     

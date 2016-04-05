@@ -10,6 +10,7 @@ from django.conf import settings
 from benchmark import tasks
 import logging
 import time
+from celery import group
 import click
 
 
@@ -37,6 +38,7 @@ def run_benchmark(start_users, max_users, multiplier, duration):
         object_id = 1
         for x in range(duration):
             days += 1
+            daily_tasks = []
             metrics_instance.on_day_change(days)
             logger.debug('Day %s for our network', days)
             # create load based on the current model
@@ -45,16 +47,26 @@ def run_benchmark(start_users, max_users, multiplier, duration):
                 # follow other users, note that we don't actually store the follower
                 #  lists for this benchmark
                 for target_user_id in social_model.get_new_follows(user_id):
-                    tasks.follow_user(
-                        social_model, user_id, target_user_id)
+                    daily_tasks.append(tasks.follow_user.s(
+                        social_model, user_id, target_user_id))
                 # create activities
                 for x in range(social_model.get_user_activity(user_id)):
                     activity = create_activity(user_id, object_id)
                     object_id += 1
-                    tasks.add_user_activity.delay(
-                        social_model, user_id, activity)
+                    daily_tasks.append(tasks.add_user_activity.s(
+                        social_model, user_id, activity))
                 # read a few pages of data
-                tasks.read_feed_pages(social_model, user_id)
+                daily_tasks.append(tasks.read_feed_pages.s(social_model, user_id))
+                
+            # send the daily tasks to celery
+            job = group(*daily_tasks)
+            result = job.apply_async()
+            # wait
+            result.join()
+            logger.debug('Day %s finished', days)
+            if not result.ready():
+                raise ValueError('day isnt finished yet')
+                
             time.sleep(1)
 
         # grow the network

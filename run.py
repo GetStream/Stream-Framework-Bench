@@ -59,7 +59,7 @@ def run_benchmark(start_users, max_users, multiplier, duration):
                 # read a few pages of data
                 daily_tasks[tasks.read_feed_pages].append([social_model, user_id])
                 
-            print t.next()
+            logger.debug('%s seconds spent creating the model', t.next())
             # send the daily tasks to celery
             batch_tasks = []
             for task, task_args in daily_tasks.items():
@@ -67,7 +67,8 @@ def run_benchmark(start_users, max_users, multiplier, duration):
                 batch_tasks.append(c)
             job = group(batch_tasks)
             job.apply_async()
-            print t.next(), 'to process %s tasks' % len(daily_tasks)
+            task_counts = [(task.name.split('.')[-1], len(args)) for task, args in daily_tasks.items()]
+            logger.debug('%s seconds spent sending %s tasks', t.next(), task_counts)
             # wait
             #while True:
             #    if result.ready():

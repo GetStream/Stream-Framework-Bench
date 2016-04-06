@@ -1,6 +1,7 @@
 import os
 import sys
 from stream_framework.utils.timing import timer
+import collections
 sys.path.insert(0, os.path.dirname(__file__))
 os.environ["DJANGO_SETTINGS_MODULE"] = "benchmark.settings"
 
@@ -38,7 +39,7 @@ def run_benchmark(start_users, max_users, multiplier, duration):
         object_id = 1
         for x in range(duration):
             days += 1
-            daily_tasks = []
+            daily_tasks = collections.defaultdict(list)
             t = timer()
             metrics_instance.on_day_change(days)
             logger.debug('Day %s for our network', days)
@@ -48,22 +49,25 @@ def run_benchmark(start_users, max_users, multiplier, duration):
                 # follow other users, note that we don't actually store the follower
                 #  lists for this benchmark
                 for target_user_id in social_model.get_new_follows(user_id):
-                    daily_tasks.append(tasks.follow_user.s(
-                        social_model, user_id, target_user_id))
+                    daily_tasks[tasks.follow_user].append([social_model, user_id, target_user_id])
+                    
                 # create activities
                 for x in range(social_model.get_user_activity(user_id)):
                     activity = create_activity(user_id, object_id)
                     object_id += 1
-                    daily_tasks.append(tasks.add_user_activity.s(
-                        social_model, user_id, activity))
+                    daily_tasks[tasks.add_user_activity].append([social_model, user_id, activity])
                 # read a few pages of data
-                daily_tasks.append(tasks.read_feed_pages.s(social_model, user_id))
+                daily_tasks[tasks.read_feed_pages].append([social_model, user_id])
                 
             print t.next()
             # send the daily tasks to celery
-            job = group(*daily_tasks)
-            result = job.apply_async()
-            print t.next()
+            batch_tasks = []
+            for task, task_args in daily_tasks.items():
+                c = task.chunks(task_args, 100)
+                batch_tasks.append(c)
+            job = group(batch_tasks)
+            job.apply_async()
+            print t.next(), 'to process %s tasks' % len(daily_tasks)
             # wait
             #while True:
             #    if result.ready():

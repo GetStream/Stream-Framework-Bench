@@ -14,7 +14,7 @@
     },
     "CassandraClusterSize" : {
       "Type" : "Number",
-      "Default" : "1",
+      "Default" : "3",
       "Description" : "How many instances do you want to use for the Cassandra's cluster?"
     },
     "RabbitMQInstanceType" : {

@@ -29,24 +29,34 @@ def connect():
 #
 # Print out private IPv4
 #
-def print_ips(tag_name):
+def print_ips(tag_name, inlined):
     conn = connect()
     reservations = conn.get_all_instances(filters={"tag:Name": tag_name})
 
+    ip_list = []
     for r in reservations:
         for i in r.instances:
-            print("%s" % (i.private_ip_address))
+            ip_list.append(i.private_ip_address)
+
+    if inlined:
+        print("%s" % ','.join(ip_list))
+    else:
+        for ip in ip_list:
+            print("%s" % ip)
 
 
 #
 # Main
 #
-opts, args = getopt.getopt(sys.argv[1:], "Lt:", ["tag-name="])
+opts, args = getopt.getopt(sys.argv[1:], "Lt:i", ["tag-name=", "inlined"])
 
 tag_name = ""
 region = ""
+inlined = False
 for opt, arg in opts:
     if opt in ("-t", "--tag-name"):
         tag_name = arg
+    if opt in ("-i", "--inlined"):
+        inlined = True
 
-print_ips(tag_name)
+print_ips(tag_name, inlined)

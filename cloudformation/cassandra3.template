@@ -194,6 +194,7 @@
         "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "CassandraMap", "AMI" ]},
         "InstanceType": { "Ref": "CassandraInstanceType" },
         "SecurityGroups": [{ "Ref" : "CassandraSecurityGroup" }],
+        "IamInstanceProfile": { "Ref": "BenchProfile" },
         "UserData": {
           "Fn::Base64": {
             "Fn::Join": [
@@ -208,6 +209,7 @@
                     [
                       "sudo groupadd bench && sudo useradd -m -s /bin/bash -p `perl -e \"print crypt('", { "Ref": "BenchUserPassword" },"','sa');\"` -g bench -G sudo bench;",
                       "printf '\\nMatch User %s\\n\\tPasswordAuthentication yes\\n' bench | sudo tee -a /etc/ssh/sshd_config && sudo service ssh restart; ",
+                      "sudo apt-get install python-boto; ",
                       "wget -O /tmp/get_ip.py https://raw.githubusercontent.com/GetStream/Stream-Framework-Bench/cloudformation2/get_ip.py; ",
                       "python /tmp/get_ip.py --tag-name stream-bench-cassandra-", { "Ref": "AWS::StackName" }, " | sudo tee /etc/cassandra/seeds.list; ",
                       "sudo wget -O /usr/share/cassandra/lib/FileSeedProvider.jar https://github.com/GetStream/Stream-Framework-Bench/raw/cloudformation2/seedprovider/FileSeedProvider.jar; ",

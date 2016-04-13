@@ -193,7 +193,6 @@
       "Properties": {
         "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "CassandraMap", "AMI" ]},
         "InstanceType": { "Ref": "CassandraInstanceType" },
-        "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
         "SecurityGroups": [{ "Ref" : "CassandraSecurityGroup" }],
         "UserData": {
           "Fn::Base64": {
@@ -208,7 +207,11 @@
                   "Fn::Join": [ "",
                     [
                       "sudo groupadd bench && sudo useradd -m -s /bin/bash -p `perl -e \"print crypt('", { "Ref": "BenchUserPassword" },"','sa');\"` -g bench -G sudo bench;",
-                      "printf '\\nMatch User %s\\n\\tPasswordAuthentication yes\\n' bench | sudo tee -a /etc/ssh/sshd_config && sudo service ssh restart"
+                      "printf '\\nMatch User %s\\n\\tPasswordAuthentication yes\\n' bench | sudo tee -a /etc/ssh/sshd_config && sudo service ssh restart; ",
+                      "wget -O /tmp/get_ip.py https://raw.githubusercontent.com/GetStream/Stream-Framework-Bench/cloudformation2/get_ip.py; ",
+                      "python /tmp/get_ip.py --tag-name stream-bench-cassandra-", { "Ref": "AWS::StackName" }, " | sudo tee /etc/cassandra/seeds.list; ",
+                      "sudo wget -O /usr/share/cassandra/lib/FileSeedProvider.jar https://github.com/GetStream/Stream-Framework-Bench/raw/cloudformation2/seedprovider/FileSeedProvider.jar; ",
+                      "sudo sed -i.bak 's/org.apache.cassandra.locator.SimpleSeedProvider/io.getstream.cassandra.locator.FileSeedProvider/' /etc/cassandra/cassandra.yaml"
                     ]
                   ]
                 }}
@@ -258,7 +261,6 @@
       "Properties": {
         "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "RabbitMap", "AMI" ]},
         "InstanceType": { "Ref": "RabbitMQInstanceType" },
-        "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
         "SecurityGroups": [{ "Ref" : "RabbitSecurityGroup" }],
         "UserData": {
           "Fn::Base64": {
@@ -345,7 +347,6 @@
       "Properties": {
         "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "CeleryMap", "AMI" ]},
         "InstanceType": { "Ref": "CeleryInstanceType" },
-        "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
         "SecurityGroups": [{ "Ref" : "CelerySecurityGroup" }],
         "IamInstanceProfile": { "Ref": "BenchProfile" },
         "UserData": {

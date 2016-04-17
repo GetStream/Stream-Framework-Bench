@@ -39,6 +39,7 @@ def run_benchmark(start_users, max_users, multiplier, duration):
         object_id = 1
         for x in range(duration):
             days += 1
+            social_model.day = days
             daily_tasks = collections.defaultdict(list)
             t = timer()
             metrics_instance.on_day_change(days)

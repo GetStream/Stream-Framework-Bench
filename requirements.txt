@@ -7,3 +7,4 @@ django==1.9.2
 click==6.2
 statsd==3.2.1
 librabbitmq==1.6.1
+unittest2==1.1.0

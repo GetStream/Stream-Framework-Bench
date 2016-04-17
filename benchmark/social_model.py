@@ -6,114 +6,96 @@ class SocialModel(object):
     '''
     Basic assumptions about our social network
     Nothing is random to ensure we create the same scenario every time we run the test
-
-    Makes assumptions about:
-    - How many activities do the active users create?
-    - How many users follow these users?
-    Average follow count should increase with network size up to a steady state of followers (S-shaped curve)
-    Using Facebook numbers: Steady state average follow count = 338
-    - How many pages do they request when browsing their feed?
     '''
     VERSION = 0.1
     daily_active_users_percentage = 10
 
-    def __init__(self, users=100):
-        self.users = users
+    def __init__(self, network_size=1000, day=1):
+        self.network_size = network_size
+        self.day = day
 
     @property
     def active_users(self):
-        active_users = [u for u in range(
-            1, self.users) if u % 100 < self.daily_active_users_percentage]
+        to_select = int(self.network_size * self.daily_active_users_percentage / 100.)
+        active_users = range(1, to_select+1)
         return active_users
 
     def get_browse_depth(self, user_id):
         '''
-        For a given user_id and network_size, how many pages does this user browse?
+        For a given active user_id
+        How many pages does he read on a given day?
         '''
-        network_size = self.users
-        if network_size < 1000:
-            return user_id % 2
-        else:
-            bin_number = user_id % 1000
-            if 995 <= bin_number:
-                return 50
-            if 985 <= bin_number < 995:
-                return 20
-            if 965 <= bin_number < 985:
-                return 10
-            if 935 <= bin_number < 965:
-                return 5
-            if 735 <= bin_number < 935:
-                return 1
-            else:
-                return 0
+        bin_number = user_id % 100
+        if 95 <= bin_number:
+            return 50
+        elif 85 <= bin_number < 95:
+            return 20
+        elif 75 <= bin_number < 85:
+            return 10
+        elif 50 <= bin_number < 75:
+            return 5
+        elif bin_number < 50:
+            return 1
 
     def get_user_activity(self, user_id):
         '''
-        For a given user_id, how many activities does this user produce during the day?
+        For a given active user_id
+        How many activities does this user produce during the day?
         '''
-        bin_number = user_id % 1000
-        if 995 <= bin_number:
+        bin_number = user_id % 100
+        if 95 <= bin_number:
             return 25
-        if 985 <= bin_number < 995:
+        elif 85 <= bin_number < 95:
             return 10
-        if 965 <= bin_number < 985:
+        elif 75 <= bin_number < 85:
             return 5
-        if 935 <= bin_number < 965:
-            return 2
-        if 735 <= bin_number < 935:
+        elif 50 <= bin_number < 75:
             return 1
-        else:
+        elif bin_number < 50:
             return 0
 
     def get_new_follows(self, user_id):
         '''
-        For a given user, how many new users do they follow during the day?
+        For a given user
+        How many new users do they follow during the day?
         '''
-        bin_number = user_id % 1000
-        if 995 <= bin_number:
+        bin_number = user_id % 100
+        if 95 <= bin_number:
             new_follows = 25
-        elif 985 <= bin_number < 995:
+        elif 85 <= bin_number < 95:
             new_follows = 10
-        elif 965 <= bin_number < 985:
+        elif 75 <= bin_number < 85:
             new_follows = 5
-        elif 935 <= bin_number < 965:
-            new_follows = 2
-        elif 735 <= bin_number < 935:
+        elif 50 <= bin_number < 75:
             new_follows = 1
-        else:
+        elif bin_number < 50:
             new_follows = 0
-        follower_ids = range(new_follows)
-        follower_ids = [(user_id * pi) %
-                        self.users for user_id in follower_ids]
+        # create a list of follow relationships based on new_follows 
+        follower_ids = []
+        for x in range(1, new_follows+1):
+            follower_ids.append(self.network_size % (x*user_id))   
+        
         return follower_ids
 
     def get_follower_ids(self, user_id, scaling=1):
         '''
         For a given user_id, how many followers does this user have?
-        This also depends on the network size
         '''
-        network_size = self.users
-        bin_number = (user_id / network_size) * 100
+        bin_number = user_id % 100
+        if 98 <= bin_number:
+            follower_percentage = 10
+            follower_count = follower_percentage * self.network_size /100
+            follower_count = max(follower_count, 1000)
+        elif 85 <= bin_number < 98:
+            follower_percentage = 5
+            follower_count = follower_percentage * self.network_size /100
+            follower_count = min(follower_count, 1000)
+        elif 75 <= bin_number < 85:
+            follower_count = 100
+        elif 50 <= bin_number < 75:
+            follower_count = 50
+        elif bin_number < 50:
+            follower_count = 5
 
-        if bin_number <= 90:
-            # No growth
-            num_followers = 0
-        if 89 < bin_number <= 99:
-            avg_friends = 338  # steady state for active users
-            # S-shaped growth on network size
-            num_followers = avg_friends * \
-                (atan((network_size - 250000000 * scaling) /
-                      150000000 * scaling) + pi / 2) / pi
-
-        else:
-            # Linear growth on network size
-            proportion_active_users = .1
-            num_followers = .25 * network_size * proportion_active_users - .25 * \
-                network_size / 2 * proportion_active_users
-
-        user_popularity = user_id % 10 + 1
-        follower_ids = range(int(num_followers))
-        follower_ids = [(user_id * pi) %
-                        network_size for user_id in follower_ids]
+        follower_ids = range(1, follower_count+1)
         return follower_ids

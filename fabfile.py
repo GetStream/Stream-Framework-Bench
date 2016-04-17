@@ -114,7 +114,7 @@ def get_ec2_instances(stack, logical_id):
 
 
 def _run_bench():
-    sudo('CQLENG_ALLOW_SCHEMA_MANAGEMENT=1 ENVIRONMENT=production python /srv/bench/sfb/run.py --start-users=10000 --max-users=10000000 --multiplier=2 --duration=10')
+    sudo('CQLENG_ALLOW_SCHEMA_MANAGEMENT=1 ENVIRONMENT=production python /srv/bench/sfb/run.py --benchmark=stream_bench_v1')
 
 
 def _verify_rabbit():

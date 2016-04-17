@@ -1,13 +1,12 @@
 from math import atan, pi
 
 
-class SocialModel(object):
+class SocialModelV1(object):
 
     '''
     Basic assumptions about our social network
     Nothing is random to ensure we create the same scenario every time we run the test
     '''
-    VERSION = 0.1
     daily_active_users_percentage = 10
 
     def __init__(self, network_size=1000, day=1):

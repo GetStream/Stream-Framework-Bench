@@ -1,11 +1,11 @@
 import os
 import sys
-from stream_framework.utils.timing import timer
-import collections
 sys.path.insert(0, os.path.dirname(__file__))
 os.environ["DJANGO_SETTINGS_MODULE"] = "benchmark.settings"
 
-from benchmark.social_model import SocialModel
+from benchmark.bench import get_benchmark
+from stream_framework.utils.timing import timer
+import collections
 from stream_framework.utils import get_metrics_instance
 from benchmark.utils import create_activity
 from django.conf import settings
@@ -19,25 +19,34 @@ import click
 logger = logging.getLogger('bench')
 
 
-
 @click.command()
-@click.option('--start-users', default=10, help='Number of greetings.')
-@click.option('--max-users', default=1000, help='Number of greetings.')
-@click.option('--multiplier', default=2, help='Number of greetings.')
-@click.option('--duration', default=3, help='Approximately the number of seconds to wait at every size of the userbase')
-def run_benchmark(start_users, max_users, multiplier, duration):
+@click.option('--benchmark', default=None, help='Which predefined benchmark to run')
+@click.option('--network-size', default=1000, help='Starting network size')
+@click.option('--max-network-size', default=1000000, help='Max network size')
+@click.option('--multiplier', default=2, help='How fast the network grows')
+@click.option('--duration', default=3, help='How many virtual days to spend at each size of the network')
+def run_benchmark(benchmark, network_size, max_network_size, multiplier, duration):
     logger.info('Starting the benchmark! Exciting.... :)')
-    logger.info('Running with settings %s', locals())
-    logger.info('Synced the cassandra schema, all good')
+    
+    if benchmark is None:
+        benchmark_class = get_benchmark('stream_bench_custom')
+        benchmark = benchmark_class(network_size, max_network_size, multiplier, duration)
+    else:
+        benchmark_class = get_benchmark(benchmark)
+        benchmark = benchmark_class()
+    
+    logger.info('Running benchmark %s', benchmark.name)
+    logger.info('Network size starting at %s will grow to %s', benchmark.network_size, benchmark.network_size)
+    logger.info('Multiplier is set to %s and duration %s', benchmark.multiplier, benchmark.duration)
     metrics_instance = get_metrics_instance()
 
-    social_model = SocialModel(users=start_users)
+    social_model = benchmark.get_social_model()
     days = 0
     while True:
         logger.info(
-            'Simulating a social network with %s users', social_model.users)
+            'Simulating a social network with network size %s', social_model.network_size)
         object_id = 1
-        for x in range(duration):
+        for x in range(benchmark.duration):
             days += 1
             social_model.day = days
             daily_tasks = collections.defaultdict(list)
@@ -82,9 +91,9 @@ def run_benchmark(start_users, max_users, multiplier, duration):
 
         # grow the network
         logger.info('Growing the social network.....')
-        social_model.users = social_model.users * multiplier
-        metrics_instance.on_network_size_change(social_model.users)
-        if social_model.users > max_users:
+        social_model.network_size = social_model.network_size * benchmark.multiplier
+        metrics_instance.on_network_size_change(social_model.network_size)
+        if social_model.network_size >= benchmark.max_network_size:
             logger.info(
                 'Reached the max users, we\'re done with our benchmark!')
 

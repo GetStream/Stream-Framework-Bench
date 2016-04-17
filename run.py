@@ -36,7 +36,7 @@ def run_benchmark(benchmark, network_size, max_network_size, multiplier, duratio
         benchmark = benchmark_class()
     
     logger.info('Running benchmark %s', benchmark.name)
-    logger.info('Network size starting at %s will grow to %s', benchmark.network_size, benchmark.network_size)
+    logger.info('Network size starting at %s will grow to %s', benchmark.network_size, benchmark.max_network_size)
     logger.info('Multiplier is set to %s and duration %s', benchmark.multiplier, benchmark.duration)
     metrics_instance = get_metrics_instance()
 

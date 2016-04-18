@@ -128,7 +128,8 @@ def _verify_cloud_init():
     sudo('ls -la /var/lib/cloud/instance/boot-finished')
     
 def _verify_cassandra():
-    sudo('ps aux | grep cassandra')
+    pass
+    #sudo('ps aux | grep cassandra')
 
 
 def run_bench(stack):

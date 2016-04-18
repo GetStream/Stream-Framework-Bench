@@ -41,6 +41,12 @@ Start the cluster on AWS (warning, this is expensive). By default the stack will
 fab create_stack:stack=cassandra
 ```
 
+Optionally you can use datadog to track the benchmark metrics:
+
+```
+fab create_stack:stack=cassandra,datadog=yourapikeyhere
+```
+
 You can view the progress in your Cloudformation dashboard.
 Note that cloud-init will take a while to run. (cassandra-driver takes a while to install)
 
@@ -49,6 +55,8 @@ Note that cloud-init will take a while to run. (cassandra-driver takes a while t
 ```
 fab run_bench:stack=cassandra
 ```
+
+Note: This step will fail if your stack didn't complete the cloud-init configuration step.
 
 The benchmark will slowly increase the number of users in the graph
 and measure:

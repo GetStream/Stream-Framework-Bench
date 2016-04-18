@@ -38,7 +38,7 @@ Change the key pair name used for starting the instances by editing stack.templa
 Start the cluster on AWS (warning, this is expensive). By default the stack will be created in the us-west-2 region.
 
 ```
-fab create_stack:stack=cassandra
+fab create_stack:stack=cassandra,key_name=yourkeyname
 ```
 
 Optionally you can use datadog to track the benchmark metrics:

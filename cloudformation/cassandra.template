@@ -2,9 +2,9 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "Cassandra, RabbitMQ, Celery workers and main instance",
   "Parameters" : {
-    "GitRevision" : {
+    "GitRepo" : {
       "Type" : "String",
-      "Default" : "production",
+      "Default" : "https://github.com/getstream/stream-framework-bench",
       "Description" : "The git revision the instances will run on"
     },
     "CassandraInstanceType" : {
@@ -14,7 +14,7 @@
     },
     "CassandraClusterSize" : {
       "Type" : "Number",
-      "Default" : "3",
+      "Default" : "1",
       "Description" : "How many instances do you want to use for the Cassandra's cluster?"
     },
     "RabbitMQInstanceType" : {
@@ -41,16 +41,17 @@
       "Type" : "String",
       "Default" : "bench2016",
       "Description" : "Please specify the password for the (super)user 'bench'"
+    },
+    "KeyName" : {
+      "Type" : "String",
+      "Default" : "StreamFrameworkBench2",
+      "Description" : "The key allowing you to login"
     }
   },
   "Mappings" : {
     "BenchMap": {
       "SettingsMap": {
-        "AvailabilityZones": ["us-west-2a"],
-        "VpcId" : "vpc-90bc4cf5",
-        "VpcCidrBlock" : "172.31.0.0/16",
-        "KeyName": "StreamFrameworkBench2",
-        "GitRepo": "https://github.com/getstream/stream-framework-bench"
+        "AvailabilityZones": ["us-west-2a"]
       },
       "CassandraMap": {
         "AMI" : "ami-1cff962c"
@@ -200,6 +201,7 @@
         "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "CassandraMap", "AMI" ]},
         "InstanceType": { "Ref": "CassandraInstanceType" },
         "SecurityGroups": [{ "Ref" : "CassandraSecurityGroup" }],
+        "KeyName": { "Ref": "KeyName" },
         "IamInstanceProfile": { "Ref": "BenchProfile" },
         "UserData": {
           "Fn::Base64": {
@@ -267,7 +269,7 @@
       "Properties": {
         "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "RabbitMap", "AMI" ]},
         "InstanceType": { "Ref": "RabbitMQInstanceType" },
-        "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
+        "KeyName": { "Ref": "KeyName" },
         "SecurityGroups": [{ "Ref" : "RabbitSecurityGroup" }],
         "IamInstanceProfile": { "Ref": "BenchProfile" },
         "UserData": {
@@ -298,10 +300,14 @@
                 " - mkdir -p /srv/bench/",
                 "\n",
                 " - /usr/bin/git clone ",
-                {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "GitRepo" ]},
+                { "Ref": "GitRepo" },
                 " /srv/bench/sfb",
                 "\n",
                 " - pip install -r /srv/bench/sfb/requirements.txt",
+                "\n",
+                " - rabbitmq-plugins enable rabbitmq_management",
+                "\n",
+                " - /etc/init.d/rabbitmq-server restart",
                 "\n",
                 " - python /srv/bench/sfb/get_ip.py --tag-name stream-bench-rabbit-", { "Ref": "AWS::StackName" }, " > /srv/bench/sfb/rabbit.ipv4",
                 "\n",
@@ -357,7 +363,7 @@
       "Properties": {
         "ImageId" : { "Fn::FindInMap" : [ "BenchMap", "CeleryMap", "AMI" ]},
         "InstanceType": { "Ref": "CeleryInstanceType" },
-        "KeyName": {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "KeyName" ]},
+        "KeyName": { "Ref": "KeyName" },
         "SecurityGroups": [{ "Ref" : "CelerySecurityGroup" }],
         "IamInstanceProfile": { "Ref": "BenchProfile" },
         "UserData": {
@@ -387,7 +393,7 @@
                 "\n",
                 " - mkdir -p /srv/bench/",
                 "\n",
-                " - /usr/bin/git clone ", {"Fn::FindInMap" : [ "BenchMap", "SettingsMap", "GitRepo" ]}, " /srv/bench/sfb",
+                " - /usr/bin/git clone ", { "Ref": "GitRepo" }, " /srv/bench/sfb",
                 "\n",
                 " - sudo groupadd bench && sudo useradd -m -s /bin/bash -p `perl -e \"print crypt('", { "Ref": "BenchUserPassword" },"','sa');\"` -g bench -G sudo bench",
                 "\n",

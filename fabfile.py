@@ -45,17 +45,24 @@ def validate_cloudformation_files():
         client.validate_template(TemplateBody=template_body)
 
 
-def create_stack(stack, datadog='none'):
+def create_stack(stack, datadog='none', key_name=None):
     validate()
     client = boto3.client('cloudformation', region_name=BENCHMARK_REGION)
     template_body = read_template(stack)
     _wait_for_stack(stack)
-    response = client.create_stack(
-        StackName='stream-bench-%s' % stack, TemplateBody=template_body, Parameters=[{
-            'ParameterKey': 'DatadogAPIKey',
-            'ParameterValue': datadog,
+    parameters = [{
+        'ParameterKey': 'DatadogAPIKey',
+        'ParameterValue': datadog,
+        'UsePreviousValue': True
+    }]
+    if key_name is not None:
+        parameters.append({
+            'ParameterKey': 'KeyName',
+            'ParameterValue': key_name,
             'UsePreviousValue': True
-        }],
+        })
+    response = client.create_stack(
+        StackName='stream-bench-%s' % stack, TemplateBody=template_body, Parameters=parameters,
         Capabilities=[
             'CAPABILITY_IAM',
         ])
@@ -128,8 +135,7 @@ def _verify_cloud_init():
     sudo('ls -la /var/lib/cloud/instance/boot-finished')
     
 def _verify_cassandra():
-    pass
-    #sudo('ps aux | grep cassandra')
+    sudo('ps aux | grep cassandra')
 
 
 def run_bench(stack):

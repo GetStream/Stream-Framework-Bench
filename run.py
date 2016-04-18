@@ -7,7 +7,7 @@ from benchmark.bench import get_benchmark
 from stream_framework.utils.timing import timer
 import collections
 from stream_framework.utils import get_metrics_instance
-from benchmark.utils import create_activity
+from benchmark.utils import create_activity, chunks
 from django.conf import settings
 from benchmark import tasks
 import logging
@@ -59,26 +59,27 @@ def run_benchmark(benchmark, network_size, max_network_size, multiplier, duratio
                 # follow other users, note that we don't actually store the follower
                 #  lists for this benchmark
                 for target_user_id in social_model.get_new_follows(user_id):
-                    daily_tasks[tasks.follow_user].append([social_model, user_id, target_user_id])
+                    daily_tasks['follow_users'].append([user_id, target_user_id])
                     
                 # create activities
                 for x in range(social_model.get_user_activity(user_id)):
                     activity = create_activity(user_id, object_id)
                     object_id += 1
-                    daily_tasks[tasks.add_user_activity].append([social_model, user_id, activity])
+                    daily_tasks['add_activities'].append([user_id, activity])
                 # read a few pages of data
-                daily_tasks[tasks.read_feed_pages].append([social_model, user_id])
+                daily_tasks['read_feed_pages'].append([user_id])
                 
             logger.debug('%s seconds spent creating the model', t.next())
             # send the daily tasks to celery
             batch_tasks = []
-            for task, task_args in daily_tasks.items():
-                c = task.chunks(task_args, 100)
-                batch_tasks.append(c)
-            job = group(batch_tasks)
-            job.apply_async()
-            task_counts = [(task.name.split('.')[-1], len(args)) for task, args in daily_tasks.items()]
-            logger.debug('%s seconds spent sending %s tasks', t.next(), task_counts)
+            for task_name, task_args in daily_tasks.items():
+                task = getattr(tasks, task_name)
+                for task_arg_chunk in chunks(task_args, 100):
+                    task_signature = task.s(social_model, task_arg_chunk)
+                    batch_tasks.append(task_signature)
+            for signature in batch_tasks:
+                signature.apply_async()
+            logger.debug('%s seconds spent sending %s tasks', t.next(), len(batch_tasks))
             # wait
             #while True:
             #    if result.ready():

@@ -29,7 +29,7 @@
     },
     "CeleryClusterSize" : {
       "Type" : "Number",
-      "Default" : "3",
+      "Default" : "12",
       "Description" : "How many instances do you want to use for the Celery worker cluster?"
     },
     "DatadogAPIKey" : {
@@ -305,10 +305,6 @@
                 "\n",
                 " - pip install -r /srv/bench/sfb/requirements.txt",
                 "\n",
-                " - rabbitmq-plugins enable rabbitmq_management",
-                "\n",
-                " - /etc/init.d/rabbitmq-server restart",
-                "\n",
                 " - python /srv/bench/sfb/get_ip.py --tag-name stream-bench-rabbit-", { "Ref": "AWS::StackName" }, " > /srv/bench/sfb/rabbit.ipv4",
                 "\n",
                 " - python /srv/bench/sfb/get_ip.py --tag-name stream-bench-cassandra-", { "Ref": "AWS::StackName" }, " > /srv/bench/sfb/cassandra.ipv4",
@@ -318,6 +314,10 @@
                 " - DD_API_KEY=",
                 { "Ref" : "DatadogAPIKey" },
                 " bash -c \"$(curl -L https://raw.githubusercontent.com/DataDog/dd-agent/master/packaging/datadog-agent/source/install_agent.sh)\"",
+                "\n",
+                " - rabbitmq-plugins enable rabbitmq_management",
+                "\n",
+                " - /etc/init.d/rabbitmq-server restart",
                 "\n"
               ]
             ]

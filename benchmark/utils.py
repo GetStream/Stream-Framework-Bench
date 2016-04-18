@@ -1,6 +1,7 @@
 from stream_framework.verbs import get_verb_storage
 from stream_framework.activity import Activity
 from stream_framework.verbs.base import *
+import itertools
 
 
 def create_activity(user_id, object_id):
@@ -15,3 +16,12 @@ def create_activity(user_id, object_id):
         42,
     )
     return activity
+
+
+def chunks(iterable, n=10000):
+    it = iter(iterable)
+    while True:
+        chunk = tuple(itertools.islice(it, n))
+        if not chunk:
+            return
+        yield chunk

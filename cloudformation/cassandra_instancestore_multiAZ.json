@@ -1,0 +1,249 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Multi-AZ Cassandra cluster",
+  "Parameters" : {
+    "CassandraInstanceType" : {
+      "Type" : "String",
+      "Default" : "i2.xlarge",
+      "Description" : "Please provide the instance type"
+    },
+    "CassandraClusterSize" : {
+      "Type" : "Number",
+      "Default" : "2",
+      "Description" : "How many instances do you want to use for the Cassandra's cluster?"
+    },
+    "CassandraAZs" : {
+      "Type" : "CommaDelimitedList",
+      "Default" : "us-east-1b,us-east-1c",
+      "Description" : "An array of AZ's names that are separated by commas"
+    },
+    "BenchUserPassword" : {
+      "Type" : "String",
+      "Default" : "bench2016",
+      "Description" : "Please specify the password for the (super)user 'bench'"
+    }
+  },
+  "Resources": {
+    "BenchRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/BenchRole/",
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "Stmt1458578116000",
+                  "Effect": "Allow",
+                  "Action": [
+                    "ec2:DescribeInstanceAttribute",
+                    "ec2:DescribeInstanceStatus",
+                    "ec2:DescribeInstances",
+                    "ec2:DescribeNetworkInterfaceAttribute",
+                    "ec2:DescribeNetworkInterfaces",
+                    "ec2:DescribeTags"
+                  ],
+                  "Resource": [
+                    "*"
+                  ]
+                }
+              ]
+            },
+            "PolicyName": "DescribeTagsBenchRole"
+          }
+        ]
+      }
+    },
+    "BenchProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/BenchProfile/",
+        "Roles": [
+          {
+            "Ref": "BenchRole"
+          }
+        ]
+      }
+    },
+    "CassandraSecurityGroupIngress1": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupName": {
+          "Ref": "CassandraSecurityGroup"
+        },
+        "IpProtocol": "tcp",
+        "ToPort": "7000",
+        "FromPort": "7000",
+        "SourceSecurityGroupName": {
+          "Ref": "CassandraSecurityGroup"
+        }
+      }
+    },
+    "CassandraSecurityGroupIngress2": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupName": {
+          "Ref": "CassandraSecurityGroup"
+        },
+        "IpProtocol": "tcp",
+        "ToPort": "7199",
+        "FromPort": "7199",
+        "SourceSecurityGroupName": {
+          "Ref": "CassandraSecurityGroup"
+        }
+      }
+    },
+    "CassandraSecurityGroupIngress3": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupName": {
+          "Ref": "CassandraSecurityGroup"
+        },
+        "IpProtocol": "tcp",
+        "ToPort": "9042",
+        "FromPort": "9042",
+        "SourceSecurityGroupName": {
+          "Ref": "CassandraSecurityGroup"
+        }
+      }
+    },
+    "CassandraSecurityGroupIngress4": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupName": {
+          "Ref": "CassandraSecurityGroup"
+        },
+        "IpProtocol": "tcp",
+        "ToPort": "9160",
+        "FromPort": "9160",
+        "SourceSecurityGroupName": {
+          "Ref": "CassandraSecurityGroup"
+        }
+      }
+    },
+    "CassandraSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable HTTP access via port 80 and SSH access",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ]
+      }
+    },
+    "CassandraAutoscaling": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "AvailabilityZones": { "Ref": "CassandraAZs" },
+        "Cooldown": "300",
+        "MaxSize": {
+          "Ref": "CassandraClusterSize"
+        },
+        "MinSize": {
+          "Ref": "CassandraClusterSize"
+        },
+        "HealthCheckGracePeriod": "300",
+        "HealthCheckType": "EC2",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  "stream-bench-cassandra-",
+                  {
+                    "Ref": "AWS::StackName"
+                  }
+                ]
+              ]
+            },
+            "PropagateAtLaunch": "true"
+          }
+        ],
+        "LaunchConfigurationName": {
+          "Ref": "Cassandra"
+        }
+      }
+    },
+    "Cassandra": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "ImageId": "ami-32f43a5f",
+        "InstanceType": {
+          "Ref": "CassandraInstanceType"
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "CassandraSecurityGroup"
+          }
+        ],
+        "IamInstanceProfile": {
+          "Ref": "BenchProfile"
+        },
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash", "\n",
+                "groupadd bench && useradd -m -s /bin/bash -p `perl -e \"print crypt('", { "Ref": "BenchUserPassword" }, "','sa');\"` -g bench -G sudo bench;", "\n",
+                "printf '\\nMatch User %s\\n\\tPasswordAuthentication yes\\n' bench | sudo tee -a /etc/ssh/sshd_config && sudo service ssh restart; ", "\n",
+                "mkdir -p /mnt/cassandra", "\n",
+                "mkfs.ext4 /dev/xvdb", "\n",
+                "mount /dev/xvdb /mnt/cassandra", "\n",
+                "printf \"%s\\t%s\\t%s\\t%s\\t%d\\t%d\\n\" '/dev/xvdb' '/mnt/cassandra' 'ext4' 'defaults,nofail,nobootwait' '0' '2' | tee -a /etc/fstab", "\n",
+                "apt-get install -y python ntp python-boto", "\n",
+                "cd /tmp", "\n",
+                "wget https://launchpad.net/ubuntu/+archive/primary/+files/python-support_1.0.15_all.deb", "\n",
+                "dpkg -i python-support_1.0.15_all.deb", "\n",
+                "cd /opt", "\n",
+                "wget --no-check-certificate --no-cookies --header \"Cookie: oraclelicense=accept-securebackup-cookie\" http://download.oracle.com/otn-pub/java/jdk/7u79-b15/jdk-7u79-linux-x64.tar.gz", "\n",
+                "tar xvzf jdk-7u79-linux-x64.tar.gz", "\n",
+                "rm -f jdk-7u79-linux-x64.tar.gz", "\n",
+                "chown -R root.root jdk1.7.0_79/", "\n",
+                "ln -s /opt/jdk1.7.0_79/bin/java /usr/bin/java", "\n",
+                "ln -s /opt/jdk1.7.0_79/bin/javac /usr/bin/javac", "\n",
+                "ln -s /opt/jdk1.7.0_79/bin/jvisualvm /usr/bin/jvisualvm", "\n",
+                "echo \"deb http://debian.datastax.com/community stable main\" | tee -a /etc/apt/sources.list.d/cassandra.sources.list", "\n",
+                "curl -L https://debian.datastax.com/debian/repo_key | apt-key add -", "\n",
+                "apt-get update", "\n",
+                "apt-get install -y dsc20=2.0.15-1 cassandra=2.0.15", "\n",
+                "chown -R cassandra.cassandra /mnt/cassandra", "\n",
+                "wget -O /tmp/get_ip.py https://raw.githubusercontent.com/GetStream/Stream-Framework-Bench/cloudformation2/get_ip.py", "\n",
+                "python /tmp/get_ip.py --tag-name stream-bench-cassandra-", { "Ref": "AWS::StackName" }, " | tee /etc/cassandra/seeds.list", "\n",
+                "sudo wget -O /usr/share/cassandra/lib/FileSeedProvider.jar https://github.com/GetStream/Stream-Framework-Bench/raw/cloudformation2/seedprovider/FileSeedProvider.jar", "\n",
+                "sed -i.bak 's/SimpleSnitch/Ec2Snitch/' /etc/cassandra/cassandra.yaml", "\n",
+                "sed -i.bak 's/org.apache.cassandra.locator.SimpleSeedProvider/io.getstream.cassandra.locator.FileSeedProvider/' /etc/cassandra/cassandra.yaml", "\n",
+                "sed -i.bak 's/var\/lib/mnt/g' /etc/cassandra/cassandra.yaml", "\n",
+                "sed -i.bak 's/Test Cluster/", { "Ref": "AWS::StackName" }, "/' /etc/cassandra/cassandra.yaml", "\n",
+                "systemctl restart cassandra", "\n"
+              ]
+            ]
+          }
+        }
+      }
+    }
+  }
+}

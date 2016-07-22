@@ -1,0 +1,247 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Multi-AZ Cassandra cluster",
+  "Parameters" : {
+    "CassandraInstanceType" : {
+      "Type" : "String",
+      "Default" : "i2.xlarge",
+      "Description" : "Please provide the instance type"
+    },
+    "CassandraClusterSize" : {
+      "Type" : "Number",
+      "Default" : "2",
+      "Description" : "How many instances do you want to use for the Cassandra's cluster?"
+    },
+    "CassandraAZs" : {
+      "Type" : "CommaDelimitedList",
+      "Default" : "us-east-1b,us-east-1c",
+      "Description" : "An array of AZ's names that are separated by commas"
+    },
+    "BenchUserPassword" : {
+      "Type" : "String",
+      "Default" : "bench2016",
+      "Description" : "Please specify the password for the (super)user 'bench'"
+    }
+  },
+  "Resources": {
+    "BenchRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/BenchRole/",
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "Stmt1458578116000",
+                  "Effect": "Allow",
+                  "Action": [
+                    "ec2:DescribeInstanceAttribute",
+                    "ec2:DescribeInstanceStatus",
+                    "ec2:DescribeInstances",
+                    "ec2:DescribeNetworkInterfaceAttribute",
+                    "ec2:DescribeNetworkInterfaces",
+                    "ec2:DescribeTags"
+                  ],
+                  "Resource": [
+                    "*"
+                  ]
+                }
+              ]
+            },
+            "PolicyName": "DescribeTagsBenchRole"
+          }
+        ]
+      }
+    },
+    "BenchProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/BenchProfile/",
+        "Roles": [
+          {
+            "Ref": "BenchRole"
+          }
+        ]
+      }
+    },
+    "CassandraSecurityGroupIngress1": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupName": {
+          "Ref": "CassandraSecurityGroup"
+        },
+        "IpProtocol": "tcp",
+        "ToPort": "7000",
+        "FromPort": "7000",
+        "SourceSecurityGroupName": {
+          "Ref": "CassandraSecurityGroup"
+        }
+      }
+    },
+    "CassandraSecurityGroupIngress2": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupName": {
+          "Ref": "CassandraSecurityGroup"
+        },
+        "IpProtocol": "tcp",
+        "ToPort": "7199",
+        "FromPort": "7199",
+        "SourceSecurityGroupName": {
+          "Ref": "CassandraSecurityGroup"
+        }
+      }
+    },
+    "CassandraSecurityGroupIngress3": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupName": {
+          "Ref": "CassandraSecurityGroup"
+        },
+        "IpProtocol": "tcp",
+        "ToPort": "9042",
+        "FromPort": "9042",
+        "SourceSecurityGroupName": {
+          "Ref": "CassandraSecurityGroup"
+        }
+      }
+    },
+    "CassandraSecurityGroupIngress4": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupName": {
+          "Ref": "CassandraSecurityGroup"
+        },
+        "IpProtocol": "tcp",
+        "ToPort": "9160",
+        "FromPort": "9160",
+        "SourceSecurityGroupName": {
+          "Ref": "CassandraSecurityGroup"
+        }
+      }
+    },
+    "CassandraSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable HTTP access via port 80 and SSH access",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ]
+      }
+    },
+    "CassandraAutoscaling": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "AvailabilityZones": { "Ref": "CassandraAZs" },
+        "Cooldown": "300",
+        "MaxSize": {
+          "Ref": "CassandraClusterSize"
+        },
+        "MinSize": {
+          "Ref": "CassandraClusterSize"
+        },
+        "HealthCheckGracePeriod": "300",
+        "HealthCheckType": "EC2",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  "stream-bench-cassandra-",
+                  {
+                    "Ref": "AWS::StackName"
+                  }
+                ]
+              ]
+            },
+            "PropagateAtLaunch": "true"
+          }
+        ],
+        "LaunchConfigurationName": {
+          "Ref": "Cassandra"
+        }
+      }
+    },
+    "Cassandra": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "ImageId": "ami-711ca91a",
+        "InstanceType": {
+          "Ref": "CassandraInstanceType"
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "CassandraSecurityGroup"
+          }
+        ],
+        "IamInstanceProfile": {
+          "Ref": "BenchProfile"
+        },
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "--clustername benchmark --totalnodes ",
+                {
+                  "Ref": "CassandraClusterSize"
+                },
+                " --version community --release 2.0.15 --opscenter no",
+                " --base64postscript ",
+                {
+                  "Fn::Base64": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "sudo groupadd bench && sudo useradd -m -s /bin/bash -p `perl -e \"print crypt('",
+                        {
+                          "Ref": "BenchUserPassword"
+                        },
+                        "','sa');\"` -g bench -G sudo bench;",
+                        "printf '\\nMatch User %s\\n\\tPasswordAuthentication yes\\n' bench | sudo tee -a /etc/ssh/sshd_config && sudo service ssh restart; ",
+                        "sudo apt-get install python-boto; ",
+                        "wget -O /tmp/get_ip.py https://raw.githubusercontent.com/GetStream/Stream-Framework-Bench/cloudformation2/get_ip.py; ",
+                        "python /tmp/get_ip.py --tag-name stream-bench-cassandra-",
+                        {
+                          "Ref": "AWS::StackName"
+                        },
+                        " | sudo tee /etc/cassandra/seeds.list; ",
+                        "sudo wget -O /usr/share/cassandra/lib/FileSeedProvider.jar https://github.com/GetStream/Stream-Framework-Bench/raw/cloudformation2/seedprovider/FileSeedProvider.jar; ",
+                        "sudo sed -i.bak 's/org.apache.cas  sandra.locator.SimpleSeedProvider/io.getstream.cassandra.locator.FileSeedProvider/' /etc/cassandra/cassandra.yaml"
+                      ]
+                    ]
+                  }
+                }
+              ]
+            ]
+          }
+        }
+      }
+    }
+  }
+}

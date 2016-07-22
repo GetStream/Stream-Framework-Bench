@@ -31,7 +31,7 @@ def connect():
 #
 def print_ips(tag_name, inlined):
     conn = connect()
-    reservations = conn.get_all_instances(filters={"tag:Name": tag_name})
+    reservations = conn.get_all_instances(filters={"tag:Name": tag_name, "instance-state-name": "running"})
 
     ip_list = []
     for r in reservations:
